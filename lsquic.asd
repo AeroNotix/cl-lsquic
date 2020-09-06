@@ -6,4 +6,4 @@
   :description "FFI Bindings to litespeed QUIC"
   :components ((:file "src/package")
                (:file "src/ffi"))
-  :depends-on (:cffi))
+  :depends-on (:cffi :bordeaux-threads))
