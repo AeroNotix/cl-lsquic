@@ -13,6 +13,9 @@
 ;; e.g. `(lsquic-str2ver "Q050" (make-pointer-to-int 4))` is an error. WTF?
 (defparameter version-map
   (alexandria:alist-hash-table
+   ;; We only support this for now, because it's all I care
+   ;; about. Adding support for others is just a case of adding the
+   ;; correct mapping here.
    '(("Q050" . :lsqver-050)) :test #'equal))
 
 (defun str->quic-version (str)
