@@ -36,5 +36,6 @@
           (format t "fucked it"))))))
 
 (defmethod close-client ((client http3-client))
-  (with-slots (engine-settings) client
-    (foreign-free engine-settings)))
+  (with-slots (engine-settings engine-api) client
+    (foreign-free engine-settings)
+    (foreign-free engine-api)))
