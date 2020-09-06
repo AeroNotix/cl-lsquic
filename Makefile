@@ -10,3 +10,6 @@ lsquic:
 	sed -i 's#<lsquic_types.h>#"lsquic_types.h"#g' include/*h && \
 	cmake -DBORINGSSL_DIR=../boringssl . && \
 	make -j $(shell nproc)
+
+src/ffi.lisp: lsquic.i Makefile
+	swig -cffi -noswig-lisp -module ffi -outdir src -I./lsquic/include/ lsquic.i
