@@ -50,7 +50,7 @@
         (error 'invalid-quic-version :requested str :available version-map))))
 
 (defmacro check-null-p (sym)
-  `(when (cffi:null-pointer-p engine-settings)
+  `(when (cffi:null-pointer-p ,sym)
     (error 'library-error :slot-name ,sym)))
 
 (defmethod initialize-instance :after ((client http3-client) &key)
