@@ -5,5 +5,12 @@
   :serial t
   :description "FFI Bindings to litespeed QUIC"
   :components ((:file "src/package")
-               (:file "src/ffi"))
-  :depends-on (:cffi :bordeaux-threads :weird-pointers))
+               (:file "src/ffi")
+               (:file "src/tyranny")
+               (:file "src/logging")
+               (:file "src/lsquic")
+               (:file "src/http3"))
+  :depends-on (:cffi
+               :bordeaux-threads
+               :static-vectors
+               :weird-pointers))
