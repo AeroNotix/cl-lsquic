@@ -1,5 +1,9 @@
 (defpackage :lsquic
-  (:use :cl :cffi))
+  (:use :cl :cffi)
+  (:export
+   #:lispify))
+
+(in-package :lsquic)
 
 (cffi:define-foreign-library lsquic
   (:unix (:or "lsquic/src/liblsquic/liblsquic.so")))
