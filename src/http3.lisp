@@ -1,11 +1,23 @@
 ;; TODO: Make this a sub-package, e.g. lsquic.http3
 (in-package :lsquic)
 
+(define-condition invalid-settings (error)
+  ()
+  (:documentation "Signalled when passed the settings for this QUIC client are invalid"))
+
+(define-condition invalid-quic-version (error)
+  ((requested :initarg :requested
+              :initform (error "Invalid")
+              :reader requested)
+   (available :initarg :available
+              :initform (error "Invalid")
+              :reader available))
+  (:documentation "Signalled when passed a QUIC version string we do not support or understand"))
+
 (defclass http3-client ()
   ((engine-version  :initarg :quic-version :initform (error "You are required to supply a QUIC protocol version string"))
    (engine-settings :initform (foreign-alloc '(:struct lsquic-engine-settings)))
    (engine-api      :initform (foreign-alloc '(:struct lsquic-engine-api)))))
-
 
 ;; TODO: the `lsquic-str2ver` doesn't work. It signals an error
 ;; because the return value doesn't cast back to what the enum was
@@ -20,8 +32,9 @@
 
 (defun str->quic-version (str)
   (let ((key (gethash str version-map)))
-    (when key
-      (foreign-enum-value 'lsquic-version key))))
+    (if key
+        (foreign-enum-value 'lsquic-version key)
+        (error 'invalid-quic-version :requested str :available version-map))))
 
 (defmethod initialize-instance :after ((client http3-client) &key)
   (with-slots (engine-settings engine-version) client
@@ -33,7 +46,7 @@
       (with-foreign-slots ((es-versions) engine-settings (:struct lsquic-engine-settings))
         (setf es-versions (logior es-versions (ash 1 (str->quic-version engine-version))))
         (when (not (eq 0 (lsquic-engine-check-settings engine-settings LSENG-HTTP errbuf (make-pointer-to-int 256))))
-          (format t "fucked it"))))))
+          (error 'invalid-settings))))))
 
 (defmethod close-client ((client http3-client))
   (with-slots (engine-settings engine-api) client
