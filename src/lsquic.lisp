@@ -1,6 +1,5 @@
 (in-package :lsquic)
 
-
 ;; The stream interface in lsquic requires callbacks for certain parts
 ;; of the connection.
 ;;
