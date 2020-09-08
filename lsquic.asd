@@ -13,4 +13,5 @@
   :depends-on (:cffi
                :bordeaux-threads
                :static-vectors
-               :weird-pointers))
+               :weird-pointers
+               :usocket))

@@ -28,7 +28,13 @@
 (defclass http3-client ()
   ((engine-version  :initarg :quic-version :initform (error "You are required to supply a QUIC protocol version string"))
    (engine-settings :initform (safe-foreign-alloc '(:struct lsquic-engine-settings)))
-   (engine-api      :initform (safe-foreign-alloc '(:struct lsquic-engine-api)))))
+   (engine-api      :initform (safe-foreign-alloc '(:struct lsquic-engine-api)))
+   (engine          :accessor engine)
+   (host            :initarg :host :initform (error "You must supply a host to connect to"))
+   (port            :initarg :host :initform 443)
+   (quic-socket)
+   (quic-conn)
+   (log-level       :initarg :log-level :initform "debug")))
 
 ;; TODO: the `lsquic-str2ver` doesn't work. It signals an error
 ;; because the return value doesn't cast back to what the enum was
@@ -51,13 +57,13 @@
 
 (defmacro check-null-p (sym)
   `(when (cffi:null-pointer-p ,sym)
-    (error 'library-error :slot-name ,sym)))
+    (error 'library-error-null-p :slot-name ,sym)))
 
 (defmethod initialize-instance :after ((client http3-client) &key)
   (unless already-lsquic-global-init
     (setf already-lsquic-global-init t)
     (lsquic-global-init LSQUIC-GLOBAL-CLIENT))
-  (with-slots (engine-settings engine-version engine-api) client
+  (with-slots (engine-settings engine-version engine-api log-level) client
     (check-null-p engine-settings)
     (check-null-p engine-api)
     (lsquic-engine-init-settings engine-settings LSENG-HTTP)
@@ -70,17 +76,44 @@
           (setf es-versions (logior es-versions (ash 1 (str->quic-version engine-version))))
           (when (not (eq 0 (lsquic-engine-check-settings engine-settings LSENG-HTTP errbuf bufsize)))
             (error 'invalid-settings))
+          (with-foreign-string (ll log-level)
+            (lsquic-set-log-level ll))
           (lsquic-logger-init logger-if (weird-pointers:save :nil) (foreign-enum-value 'lsquic-logger-timestamp-style :LLTS-HHMMSSUS))
           (with-foreign-slots ((ea-settings ea-packets-out ea-packets-out-ctx ea-stream-if ea-stream-if-ctx) engine-api (:struct lsquic-engine-api))
             (setf ea-settings engine-settings)
             (setf ea-stream-if client-callbacks)
             (setf ea-stream-if-ctx (weird-pointers:save client))
-            ;(setf ea-packets-out (callback cb-packets-out))
+            (setf ea-packets-out (callback cb-packets-out))
             (setf ea-packets-out-ctx (weird-pointers:save client)))
           (let ((engine (lsquic-engine-new LSENG-HTTP engine-api)))
+            (format t "~A~%" engine)
             (check-null-p engine)))))))
 
 (defmethod close-client ((client http3-client))
   (with-slots (engine-settings engine-api) client
     (foreign-free engine-settings)
     (foreign-free engine-api)))
+
+
+;; lsquic_conn_t *
+;; lsquic_engine_connect (lsquic_engine_t *, enum lsquic_version,
+;;                        const struct sockaddr *local_sa,
+;;                        const struct sockaddr *peer_sa,
+;;                        void *peer_ctx, lsquic_conn_ctx_t *conn_ctx,
+;;                        const char *hostname, unsigned short base_plpmtu,
+;;                        const unsigned char *sess_resume, size_t sess_resume_len,
+;;                        /** Resumption token: optional */
+;;                                        const unsigned char *token, size_t token_sz);
+
+(defmethod quic-connect ((client http3-client))
+  (with-slots (host port engine quic-socket quic-conn engine-version) client
+    (with-pointer-to-int (version (str->quic-version engine-version))
+      (let* ((peer-sa (get-peer-address-for-host host))
+             (socket (create-udp-socket host :port 443))
+             (conn (lsquic-engine-connect engine
+                                          version
+                                          )))
+        (check-null-p engine)
+        (setf quic-socket socket)
+          (setf quic-conn conn)))))
+
