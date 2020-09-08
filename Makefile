@@ -4,14 +4,17 @@ BORINGSSL_COMMIT=251b5169fd44345f455438312ec4e18ae07fd58c
 
 all: src/ffi.lisp src/ffi-dns.lisp
 
-lsquic:
-	git clone --recursive https://github.com/litespeedtech/lsquic.git --depth 1
+clone:
+	git clone --recursive https://github.com/AeroNotix/lsquic.git --depth 1
+	cd lsquic && git submodule init && git submodule update
 	git clone https://boringssl.googlesource.com/boringssl
-	cd boringssl && git checkout ${BORINGSSL_COMMIT} && cmake -DCMAKE_BUILD_TYPE=Release . && make -j $(shell nproc)
-	cd lsquic && sed -i '/Werror/d' CMakeLists.txt && \
-	sed -i 's#<lsquic_types.h>#"lsquic_types.h"#g' include/*h && \
-	cmake -DBORINGSSL_DIR=../boringssl . && \
-	make -j $(shell nproc)
+	cd boringssl && git checkout ${BORINGSSL_COMMIT}
+
+lsquic:
+	cd lsquic && cmake -DAS_SHARED_LIB=1 -DBORINGSSL_DIR=../boringssl . && make -j $(shell nproc)
+
+c-src/libdns.so: c-src/dns.c c-src/dns.h
+	cd c-src && make
 
 src/ffi.lisp: lsquic.i Makefile
 	swig -cffi -noswig-lisp -module ffi -outdir src -I./lsquic/include/ lsquic.i
