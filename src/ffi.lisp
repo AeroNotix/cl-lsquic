@@ -24,7 +24,7 @@
 
 (cl:defconstant #.(lispify "LSQUIC_MINOR_VERSION" 'constant) 19)
 
-(cl:defconstant #.(lispify "LSQUIC_PATCH_VERSION" 'constant) 8)
+(cl:defconstant #.(lispify "LSQUIC_PATCH_VERSION" 'constant) 10)
 
 (cl:defconstant #.(lispify "LSENG_SERVER" 'constant) (cl:ash 1 0))
 
@@ -390,6 +390,12 @@
   (s :pointer)
   (vec :pointer)
   (count :int))
+
+(cffi:defcfun ("lsquic_stream_pwritev" #.(lispify "lsquic_stream_pwritev" 'function)) :pointer
+  (s :pointer)
+  (preadv :pointer)
+  (user_data :pointer)
+  (n_to_write :pointer))
 
 (cffi:defcstruct #.(lispify "lsquic_reader" 'classname)
 	(#.(lispify "lsqr_read" 'slotname) :pointer)
