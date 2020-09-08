@@ -9,6 +9,7 @@
                (:file "src/tyranny")
                (:file "src/logging")
                (:file "src/lsquic")
+               (:file "src/sockets")
                (:file "src/http3"))
   :depends-on (:cffi
                :bordeaux-threads

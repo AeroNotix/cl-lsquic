@@ -19,5 +19,4 @@
 (defun create-udp-socket (host &key (port 443))
   (let ((socket (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp))
         (addr (nth 0 (get-peer-address-for-host host))))
-    (sb-bsd-sockets:socket-connect socket (sb-bsd-sockets:host-ent-address addr) port))
-
+    (sb-bsd-sockets:socket-connect socket (sb-bsd-sockets:host-ent-address addr) port)))
