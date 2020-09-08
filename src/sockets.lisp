@@ -20,6 +20,7 @@
   (parse-ip-from-string ip #\. (byte 8 0)))
 
 (defun ip-vec-to-string (ip)
+  "Pretty devious. If I do say so myself."
   (format nil "~{~D~^.~}" (coerce ip 'list)))
 
 (defun as-sockaddr (socket-family ip-port)
