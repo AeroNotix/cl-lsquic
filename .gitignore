@@ -1,2 +1,2 @@
-lsquic
-boringssl
+c-src/*.o
+c-src/*.so
