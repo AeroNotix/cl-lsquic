@@ -5,8 +5,7 @@ BORINGSSL_COMMIT=251b5169fd44345f455438312ec4e18ae07fd58c
 all: src/ffi.lisp src/ffi-dns.lisp
 
 clone:
-	git clone --recursive https://github.com/AeroNotix/lsquic.git --depth 1
-	cd lsquic && git submodule init && git submodule update
+	git clone --recursive https://github.com/AeroNotix/lsquic.git
 	git clone https://boringssl.googlesource.com/boringssl
 	cd boringssl && git checkout ${BORINGSSL_COMMIT}
 
