@@ -6,6 +6,7 @@
   :description "FFI Bindings to litespeed QUIC"
   :components ((:file "src/package")
                (:file "src/ffi")
+               (:file "src/ffi-dns")
                (:file "src/tyranny")
                (:file "src/logging")
                (:file "src/lsquic")
