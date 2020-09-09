@@ -17,3 +17,6 @@
             (progn
               ,@body)
          (cffi:foreign-free ,name)))))
+
+(defmacro safe-foreign-alloc (type)
+  `(static-vectors:fill-foreign-memory (foreign-alloc ,type) (foreign-type-size ,type) 0))

@@ -22,9 +22,6 @@
               :reader available))
   (:documentation "Signalled when passed a QUIC version string we do not support or understand"))
 
-(defmacro safe-foreign-alloc (type)
-  `(static-vectors:fill-foreign-memory (foreign-alloc ,type) (foreign-type-size ,type) 0))
-
 (defclass http3-client ()
   ((engine-version  :initarg :quic-version :initform (error "You are required to supply a QUIC protocol version string"))
    (engine-settings :initform (safe-foreign-alloc '(:struct lsquic-engine-settings)))
