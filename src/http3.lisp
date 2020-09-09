@@ -31,7 +31,8 @@
    (port            :initarg :host :initform 443)
    (quic-socket)
    (quic-conn)
-   (log-level       :initarg :log-level :initform "debug")))
+   (log-level       :initarg :log-level :initform "debug")
+   (wp-self         :accessor wp-self)))
 
 ;; TODO: the `lsquic-str2ver` doesn't work. It signals an error
 ;; because the return value doesn't cast back to what the enum was
@@ -60,7 +61,7 @@
   (unless already-lsquic-global-init
     (setf already-lsquic-global-init t)
     (lsquic-global-init LSQUIC-GLOBAL-CLIENT))
-  (with-slots (engine-settings engine-version engine-api log-level) client
+  (with-slots (engine-settings engine-version engine-api log-level wp-self) client
     (check-null-p engine-settings)
     (check-null-p engine-api)
     (lsquic-engine-init-settings engine-settings LSENG-HTTP)
@@ -86,6 +87,7 @@
           (let ((engine (lsquic-engine-new LSENG-HTTP engine-api)))
             (format t "~A~%" engine)
             (check-null-p engine)
+            (setf wp-self (weird-pointers:save client))
             (setf (engine client) engine)))))))
 
 (defmethod close-client ((client http3-client))
@@ -94,24 +96,25 @@
     (foreign-free engine-api)))
 
 (defmethod quic-connect ((client http3-client))
-  (with-slots (host port engine quic-socket quic-conn engine-version) client
-
+  (with-slots (host port engine quic-socket quic-conn engine-version wp-self) client
     (let* ((version (str->quic-version engine-version))
-           (socket (create-udp-socket host :port 443))
-           (wp-socket (weird-pointers:save socket))
-           (conn (lsquic-engine-connect engine
-                                        version
-                                        (local-sockaddr socket)
-                                        (peer-sockaddr socket)
-                                        wp-socket
-                                        (cffi:null-pointer)
-                                        host
-                                        0
-                                        (cffi:null-pointer)
-                                        (make-pointer-to-int 0)
-                                        (cffi:null-pointer)
-                                        (make-pointer-to-int 0))))
-      (check-null-p conn)
+           (socket (create-udp-socket host :port 443)))
       (setf quic-socket socket)
-      (setf quic-conn conn))))
+      (let ((conn (lsquic-engine-connect engine
+                                         version
+                                         (local-sockaddr socket)
+                                         (peer-sockaddr socket)
+                                         wp-self
+                                         (cffi:null-pointer)
+                                         host
+                                         0
+                                         (cffi:null-pointer)
+                                         (make-pointer-to-int 0)
+                                         (cffi:null-pointer)
+                                         (make-pointer-to-int 0))))
+        (check-null-p conn)
+        (setf quic-conn conn))))
+  (values))
 
+(defmethod new-stream-ctx ((client http3-client) lsquic-conn)
+  (wp-self client))
