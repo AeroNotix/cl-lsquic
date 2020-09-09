@@ -51,4 +51,5 @@
         (setf on-new-stream (callback cb-on-new-stream))
         (setf on-read (callback cb-on-read))
         (setf on-write (callback cb-on-write))
-        (setf on-close (callback cb-on-close))))))
+        (setf on-close (callback cb-on-close)))
+      lsif)))
