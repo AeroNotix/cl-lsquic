@@ -93,17 +93,6 @@
     (foreign-free engine-settings)
     (foreign-free engine-api)))
 
-
-;; lsquic_conn_t *
-;; lsquic_engine_connect (lsquic_engine_t *, enum lsquic_version,
-;;                        const struct sockaddr *local_sa,
-;;                        const struct sockaddr *peer_sa,
-;;                        void *peer_ctx, lsquic_conn_ctx_t *conn_ctx,
-;;                        const char *hostname, unsigned short base_plpmtu,
-;;                        const unsigned char *sess_resume, size_t sess_resume_len,
-;;                        /** Resumption token: optional */
-;;                                        const unsigned char *token, size_t token_sz);
-
 (defmethod quic-connect ((client http3-client))
   (with-slots (host port engine quic-socket quic-conn engine-version) client
 
