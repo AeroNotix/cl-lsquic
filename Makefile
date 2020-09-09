@@ -20,3 +20,6 @@ src/ffi.lisp: lsquic.i Makefile
 
 src/ffi-dns.lisp: dns.i Makefile
 	swig -cffi -noswig-lisp -module ffi-dns -outdir src -I./c-src dns.i
+
+src/ffi-udp.lisp: udp.i Makefile
+	swig -cffi -noswig-lisp -module ffi-udp -outdir src -I./c-src udp.i

@@ -20,11 +20,9 @@
 (defcallback cb-on-goaway-received :pointer ((lsquic-conn :pointer))
   (format t "cb-on-goaway-received~%"))
 
-(defcallback cb-on-conn-closed :pointer ((lsquic-conn :pointer))
-  (format t "cb-on-conn-closed~A")
-  (force-output)
-  ;; (let ((ctx (weird-pointers:restore (lsquic-conn-get-ctx lsquic-conn)))))
-  )
+(defcallback cb-on-conn-closed :void ((lsquic-conn :pointer))
+  (format t "cb-on-conn-closed~%")
+  (force-output))
 
 (defcallback cb-on-new-stream :pointer ((lsquic-conn :pointer) (lsquic-stream :pointer))
   (let ((ctx (weird-pointers:restore (lsquic-conn-get-ctx lsquic-conn))))
@@ -54,8 +52,23 @@
 (defcallback cb-on-sess-resume :pointer ((lsquic-conn :pointer) (token :pointer) (token_size :int))
   (format t "cb-on-sess-resume~%") (force-output))
 (defcallback cb-packets-out :int ((packets-out-ctx :pointer) (specs :pointer) (count :int))
-  (format t "cb-on-packets-out~%") (force-output)
-  -1)
+  (declare (ignore packets-out-ctx))
+  (let ((n 0))
+    ; (not (cffi:pointer-eq (cffi:null-pointer) specs))
+    (loop while (< n count)
+          do
+             (progn
+               (with-foreign-slots ((iov iovlen dest-sa peer-ctx) specs (:struct lsquic-out-spec))
+                 (let ((client (weird-pointers:restore peer-ctx)))
+                   (format t "~A - ~A~%" iov dest-sa)
+                   (let ((count (send-packets-out dest-sa iov iovlen (sb-bsd-sockets:socket-file-descriptor (socket (socket client))))))
+                     (when (< count 0)
+                       (error)))
+                   (incf n)
+                   (cffi:incf-pointer specs)))))
+    (if (> n 0)
+        n
+        -1)))
 
 (defparameter client-callbacks
   (progn

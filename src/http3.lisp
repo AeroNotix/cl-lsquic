@@ -29,7 +29,7 @@
    (engine          :accessor engine)
    (host            :initarg :host :initform (error "You must supply a host to connect to"))
    (port            :initarg :host :initform 443)
-   (quic-socket)
+   (socket     :accessor socket)
    (quic-conn)
    (log-level       :initarg :log-level :initform "debug")
    (wp-self         :accessor wp-self)))
@@ -96,14 +96,14 @@
     (foreign-free engine-api)))
 
 (defmethod quic-connect ((client http3-client))
-  (with-slots (host port engine quic-socket quic-conn engine-version wp-self) client
+  (with-slots (host port engine socket quic-conn engine-version wp-self) client
     (let* ((version (str->quic-version engine-version))
-           (socket (create-udp-socket host :port 443)))
-      (setf quic-socket socket)
+           (udp-socket (create-udp-socket host :port 443)))
+      (setf socket udp-socket)
       (let ((conn (lsquic-engine-connect engine
                                          version
-                                         (local-sockaddr socket)
-                                         (peer-sockaddr socket)
+                                         (local-sockaddr udp-socket)
+                                         (peer-sockaddr udp-socket)
                                          wp-self
                                          (cffi:null-pointer)
                                          host
@@ -114,7 +114,12 @@
                                          (make-pointer-to-int 0))))
         (check-null-p conn)
         (setf quic-conn conn))))
+  (process-conns client)
   (values))
 
 (defmethod new-stream-ctx ((client http3-client) lsquic-conn)
   (wp-self client))
+
+(defmethod process-conns ((client http3-client))
+  (with-slots (engine) client
+    (lsquic-engine-process-conns engine)))

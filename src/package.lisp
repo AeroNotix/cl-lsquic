@@ -11,6 +11,9 @@
 (cffi:define-foreign-library dns
   (:unix (:or "c-src/libdns.so")))
 
+(cffi:define-foreign-library udp
+  (:unix (:or "c-src/libudp.so")))
+
 (defun lispify (name flag &optional (package *package*))
   "Borrowed from: https://github.com/mtstickney/cl-libqmlbind/blob/24df1d4248c8962eaadb9dc180e25afa14c7492d/cl-libqmlbind.lisp"
   (intern (string-upcase (map 'string (lambda (c)
@@ -22,3 +25,4 @@
 
 (cffi:use-foreign-library lsquic)
 (cffi:use-foreign-library dns)
+(cffi:use-foreign-library udp)
