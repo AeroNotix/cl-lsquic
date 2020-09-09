@@ -35,7 +35,7 @@
          (addr (nth 0 (get-peer-address-for-host host)))
          (socket-family (sb-bsd-sockets:socket-family socket)))
     (sb-bsd-sockets:socket-connect socket (sb-bsd-sockets:host-ent-address addr) port)
-    (let ((local-sockaddr (as-sockaddr socket-family (multiple-value-list (sb-bsd-sockets:socket-peername socket))))
+    (let ((local-sockaddr (as-sockaddr socket-family (multiple-value-list (sb-bsd-sockets:socket-name socket))))
           (peer-sockaddr (as-sockaddr socket-family (multiple-value-list (sb-bsd-sockets:socket-peername socket)))))
       (make-instance 'socket :socket socket :local-sockaddr local-sockaddr :peer-sockaddr peer-sockaddr))))
 

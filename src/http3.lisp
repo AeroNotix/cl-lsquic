@@ -71,8 +71,9 @@
     ;; from somewhere, instead of this foreign-alloc that we don't
     ;; free.
     (let ((errbuf (foreign-alloc :char :count 256)))
-      (with-foreign-slots ((es-versions) engine-settings (:struct lsquic-engine-settings))
+      (with-foreign-slots ((es-versions es-ql-bits) engine-settings (:struct lsquic-engine-settings))
         (with-pointer-to-int (bufsize 256)
+          (setf es-ql-bits 0)
           (setf es-versions (logior es-versions (ash 1 (str->quic-version engine-version))))
           (when (not (eq 0 (lsquic-engine-check-settings engine-settings LSENG-HTTP errbuf bufsize)))
             (error 'invalid-settings))
@@ -87,7 +88,8 @@
             (setf ea-packets-out-ctx (weird-pointers:save client)))
           (let ((engine (lsquic-engine-new LSENG-HTTP engine-api)))
             (format t "~A~%" engine)
-            (check-null-p engine)))))))
+            (check-null-p engine)
+            (setf (engine client) engine)))))))
 
 (defmethod close-client ((client http3-client))
   (with-slots (engine-settings engine-api) client
@@ -107,13 +109,23 @@
 
 (defmethod quic-connect ((client http3-client))
   (with-slots (host port engine quic-socket quic-conn engine-version) client
-    (with-pointer-to-int (version (str->quic-version engine-version))
-      (let* ((peer-sa (get-peer-address-for-host host))
-             (socket (create-udp-socket host :port 443))
-             (conn (lsquic-engine-connect engine
-                                          version
-                                          )))
-        (check-null-p engine)
-        (setf quic-socket socket)
-          (setf quic-conn conn)))))
+
+    (let* ((version (str->quic-version engine-version))
+           (socket (create-udp-socket host :port 443))
+           (wp-socket (weird-pointers:save socket))
+           (conn (lsquic-engine-connect engine
+                                        version
+                                        (local-sockaddr socket)
+                                        (peer-sockaddr socket)
+                                        wp-socket
+                                        (cffi:null-pointer)
+                                        host
+                                        0
+                                        (cffi:null-pointer)
+                                        (make-pointer-to-int 0)
+                                        (cffi:null-pointer)
+                                        (make-pointer-to-int 0))))
+      (check-null-p conn)
+      (setf quic-socket socket)
+      (setf quic-conn conn))))
 
