@@ -15,7 +15,7 @@
 (defcallback cb-on-new-conn :pointer ((stream-if-ctx :pointer) (lsquic-conn :pointer))
   (format t "cb-on-new-conn~%")
   (let* ((client (weird-pointers:restore stream-if-ctx)))
-    (new-stream-ctx lsquic-conn)))
+    (new-stream-ctx client lsquic-conn)))
 
 (defcallback cb-on-goaway-received :pointer ((lsquic-conn :pointer))
   (format t "cb-on-goaway-received~%"))
