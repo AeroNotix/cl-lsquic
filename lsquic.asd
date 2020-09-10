@@ -7,6 +7,7 @@
   :components ((:file "src/package")
                (:file "src/ffi")
                (:file "src/ffi-dns")
+               (:file "src/ffi-udp")
                (:file "src/tyranny")
                (:file "src/logging")
                (:file "src/lsquic")
