@@ -578,7 +578,7 @@
 
 (cffi:defcfun ("lsquic_engine_earliest_adv_tick" #.(lispify "lsquic_engine_earliest_adv_tick" 'function)) :int
   (engine :pointer)
-  (diff :pointer))
+  (diff (:pointer :int)))
 
 (cffi:defcfun ("lsquic_engine_count_attq" #.(lispify "lsquic_engine_count_attq" 'function)) :unsigned-int
   (engine :pointer)

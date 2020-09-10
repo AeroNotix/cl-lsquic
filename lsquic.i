@@ -1,5 +1,7 @@
 %feature("intern_function", "lispify");
 
+%typemap(cin) int* "(:pointer :int)";
+
 %insert("lisphead") %{
 (in-package :lsquic)
 %}
