@@ -54,13 +54,11 @@
 (defcallback cb-packets-out :int ((packets-out-ctx :pointer) (specs :pointer) (count :int))
   (declare (ignore packets-out-ctx))
   (let ((n 0))
-    ; (not (cffi:pointer-eq (cffi:null-pointer) specs))
     (loop while (< n count)
           do
              (progn
                (with-foreign-slots ((iov iovlen dest-sa peer-ctx) specs (:struct lsquic-out-spec))
                  (let ((client (weird-pointers:restore peer-ctx)))
-                   (format t "~A - ~A~%" iov dest-sa)
                    (let ((count (send-packets-out dest-sa iov iovlen (sb-bsd-sockets:socket-file-descriptor (socket (socket client))))))
                      (when (< count 0)
                        (error)))
