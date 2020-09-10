@@ -122,4 +122,10 @@
 
 (defmethod process-conns ((client http3-client))
   (with-slots (engine) client
-    (lsquic-engine-process-conns engine)))
+    (lsquic-engine-process-conns engine)
+    (let ((diff 0))
+      (when (> (lsquic-engine-earliest-adv-tick engine diff) 0)
+        ;; Here we should schedule ourselves again.
+        (sb-ext:schedule-timer
+         (sb-ext:make-timer (lambda ())))))))
+
