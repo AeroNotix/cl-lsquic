@@ -6,3 +6,4 @@
 
 
 int send_packets_out(struct sockaddr* dest_sa, struct iovec *iov, size_t iovilen, int fd);
+int recv_packets_in(struct lsquic_engine *engine, struct sockaddr *local_sas, int fd, void *peer_ctx);

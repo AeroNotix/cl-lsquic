@@ -14,4 +14,10 @@
   (iovilen :pointer)
   (fd :int))
 
+(cffi:defcfun ("recv_packets_in" #.(lispify "recv_packets_in" 'function)) :int
+  (engine :pointer)
+  (local_sas :pointer)
+  (fd :int)
+  (peer_ctx :pointer))
+
 
