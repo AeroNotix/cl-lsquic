@@ -70,12 +70,25 @@
 
 (defparameter client-callbacks
   (progn
-    (let ((lsif (foreign-alloc '(:struct lsquic-stream-if))))
-      (with-foreign-slots ((on-new-conn on-conn-closed on-new-stream on-read on-write on-close) lsif (:struct lsquic-stream-if))
-        (setf on-new-conn (callback cb-on-new-conn))
-        (setf on-conn-closed (callback cb-on-conn-closed))
-        (setf on-new-stream (callback cb-on-new-stream))
-        (setf on-read (callback cb-on-read))
-        (setf on-write (callback cb-on-write))
-        (setf on-close (callback cb-on-close)))
-      lsif)))
+    (let ((lsif (safe-foreign-alloc '(:struct lsquic-stream-if))))
+      (with-foreign-slots ((on-new-conn
+	                        on-goaway-received
+	                        on-conn-closed
+	                        on-new-stream
+	                        on-read
+	                        on-write
+	                        on-close
+	                        on-hsk-done
+	                        on-new-token
+                            on-sess-resume-info) lsif (:struct lsquic-stream-if))
+	  (setf on-new-conn (callback cb-on-new-conn))
+	  (setf on-goaway-received (callback cb-ongoaway-received))
+	  (setf on-conn-closed (callback cb-on-conn-closed))
+	  (setf on-new-stream (callback cb-on-new-stream))
+	  (setf on-read (callback cb-on-read))
+	  (setf on-write (callback cb-on-write))
+	  (setf on-close (callback cb-on-close))
+	  (setf on-hsk-done (callback cb-on-hsk-done))
+	  (setf on-new-token (callback cb-on-new-token))
+      (setf on-sess-resume-info (callback cb-on-sess-resume-info))
+      lsif))))
