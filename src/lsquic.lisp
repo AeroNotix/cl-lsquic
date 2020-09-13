@@ -13,9 +13,9 @@
 ;; Each callback then pulls that back out and tries to use it.
 
 (defcallback cb-on-new-conn :pointer ((stream-if-ctx :pointer) (lsquic-conn :pointer))
-  (format t "cb-on-new-conn~%")
-  (let* ((client (weird-pointers:restore stream-if-ctx)))
-    (new-stream-ctx client lsquic-conn)))
+  (format t "cb-on-new-conn: ~D  / ~A~%" (lsquic-conn-n-avail-streams lsquic-conn) (callback cb-on-new-conn))
+  (lsquic-conn-make-stream lsquic-conn)
+  stream-if-ctx)
 
 (defcallback cb-on-goaway-received :pointer ((lsquic-conn :pointer))
   (format t "cb-on-goaway-received~%"))
