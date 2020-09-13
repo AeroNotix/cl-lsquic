@@ -99,7 +99,7 @@
   (with-slots (host port engine socket quic-conn engine-version wp-self) client
     (with-pointer-to-int (zero 0)
       (let* ((version (str->quic-version engine-version))
-             (udp-socket (create-udp-socket host :port 443)))
+             (udp-socket (create-udp-socket host :port port)))
         (setf socket udp-socket)
         (let ((conn (lsquic-engine-connect engine
                                            version
