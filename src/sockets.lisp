@@ -34,6 +34,7 @@
   (let* ((socket (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp))
          (addr (nth 0 (get-peer-address-for-host host)))
          (socket-family (sb-bsd-sockets:socket-family socket)))
+    (setf (sb-bsd-sockets:non-blocking-mode socket) t)
     (sb-bsd-sockets:socket-connect socket (sb-bsd-sockets:host-ent-address addr) port)
     (let ((local-sockaddr (as-sockaddr socket-family (multiple-value-list (sb-bsd-sockets:socket-name socket))))
           (peer-sockaddr (as-sockaddr socket-family (multiple-value-list (sb-bsd-sockets:socket-peername socket)))))
