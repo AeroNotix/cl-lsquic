@@ -97,23 +97,24 @@
 
 (defmethod quic-connect ((client http3-client))
   (with-slots (host port engine socket quic-conn engine-version wp-self) client
-    (let* ((version (str->quic-version engine-version))
-           (udp-socket (create-udp-socket host :port 443)))
-      (setf socket udp-socket)
-      (let ((conn (lsquic-engine-connect engine
-                                         version
-                                         (local-sockaddr udp-socket)
-                                         (peer-sockaddr udp-socket)
-                                         wp-self
-                                         (cffi:null-pointer)
-                                         host
-                                         0
-                                         (cffi:null-pointer)
-                                         (make-pointer-to-int 0)
-                                         (cffi:null-pointer)
-                                         (make-pointer-to-int 0))))
+    (with-pointer-to-int (zero 0)
+      (let* ((version (str->quic-version engine-version))
+             (udp-socket (create-udp-socket host :port 443)))
+        (setf socket udp-socket)
+        (let ((conn (lsquic-engine-connect engine
+                                           version
+                                           (local-sockaddr udp-socket)
+                                           (peer-sockaddr udp-socket)
+                                           wp-self
+                                           (cffi:null-pointer)
+                                           host
+                                           0
+                                           (cffi:null-pointer)
+                                           zero
+                                           (cffi:null-pointer)
+                                           zero)))
         (check-null-p conn)
-        (setf quic-conn conn))))
+        (setf quic-conn conn)))))
   (process-conns client)
   (values))
 
