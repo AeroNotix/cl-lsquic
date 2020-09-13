@@ -11,6 +11,6 @@
 (cffi:defcfun ("gen_sockaddr" #.(lispify "gen_sockaddr" 'function)) :pointer
   (family :int)
   (ip :string)
-  (port :pointer))
+  (port :unsigned-short))
 
 

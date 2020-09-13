@@ -27,8 +27,7 @@
   (let* ((ip (nth 0 ip-port))
          (port (nth 1 ip-port))
          (ip-str (ip-vec-to-string ip)))
-    (with-pointer-to-int (p port)
-      (gen-sockaddr socket-family ip-str p))))
+    (gen-sockaddr socket-family ip-str port)))
 
 (defun create-udp-socket (host &key (port 443))
   (let* ((socket (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp))
