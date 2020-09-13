@@ -124,9 +124,12 @@
 (defmethod process-conns ((client http3-client))
   (with-slots (engine) client
     (lsquic-engine-process-conns engine)
-    (let ((diff 0))
+    (with-pointer-to-int (diff 0)
       (when (> (lsquic-engine-earliest-adv-tick engine diff) 0)
         ;; Here we should schedule ourselves again.
+        (format t "diff: ~D~%" (mem-aref diff :int))
         (sb-ext:schedule-timer
-         (sb-ext:make-timer (lambda ())))))))
-
+         (sb-ext:make-timer (lambda ()
+                              (format t "Processing conns~%")
+                              (process-conns client)))
+         (/ (mem-aref diff :int) 1000000))))))
