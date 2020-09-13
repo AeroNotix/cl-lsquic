@@ -31,7 +31,8 @@
    (port            :initarg :port :initform 443)
    (socket          :accessor socket)
    (quic-conn)
-   (log-level       :initarg :log-level :initform "debug")
+   (log-level       :initarg :log-level :initform "info")
+   (process-conns-lock :accessor process-conns-lock :initform (bordeaux-threads:make-lock "process-conns"))
    (wp-self         :accessor wp-self)))
 
 ;; TODO: the `lsquic-str2ver` doesn't work. It signals an error
@@ -106,7 +107,7 @@
                                            (local-sockaddr udp-socket)
                                            (peer-sockaddr udp-socket)
                                            wp-self
-                                           (cffi:null-pointer)
+                                           wp-self
                                            host
                                            0
                                            (cffi:null-pointer)
@@ -114,22 +115,37 @@
                                            (cffi:null-pointer)
                                            zero)))
         (check-null-p conn)
-        (setf quic-conn conn)))))
-  (process-conns client)
-  (values))
+          (setf quic-conn conn)))))
+  (sb-ext:schedule-timer
+   (sb-ext:make-timer (lambda () (process-conns client)) :thread t)
+   0.1)
+  client)
 
 (defmethod new-stream-ctx ((client http3-client) lsquic-conn)
   (wp-self client))
 
 (defmethod process-conns ((client http3-client))
-  (with-slots (engine) client
-    (lsquic-engine-process-conns engine)
-    (with-pointer-to-int (diff 0)
-      (when (> (lsquic-engine-earliest-adv-tick engine diff) 0)
-        ;; Here we should schedule ourselves again.
-        (format t "diff: ~D~%" (mem-aref diff :int))
-        (sb-ext:schedule-timer
-         (sb-ext:make-timer (lambda ()
-                              (format t "Processing conns~%")
-                              (process-conns client)))
-         (/ (mem-aref diff :int) 1000000))))))
+  (bordeaux-threads:with-lock-held ((process-conns-lock client))
+    (with-slots (engine) client
+      (lsquic-engine-process-conns engine)
+      (with-pointer-to-int (diff 0)
+        (when (> (lsquic-engine-earliest-adv-tick engine diff) 0)
+          (sb-ext:schedule-timer
+           (sb-ext:make-timer (lambda () (process-conns client)) :thread t)
+           (/ (mem-aref diff :int) 1000000)))))))
+
+(defgeneric packets-in (client))
+
+(defmethod packets-in ((client http3-client))
+  (bordeaux-threads:with-lock-held ((process-conns-lock client))
+    (with-slots (socket engine wp-self) client
+      (let ((read (recv-packets-in engine (local-sockaddr socket) (sb-bsd-sockets:socket-file-descriptor (socket socket)) wp-self)))
+        (format t "recv-packets-in: ~D / ~D~%" (sb-bsd-sockets:socket-file-descriptor (socket socket)) read)
+        (when (>= read 0)
+          (lsquic-engine-process-conns engine)
+          (sb-ext:schedule-timer
+           (sb-ext:make-timer (lambda () (packets-in client)) :thread t)
+           0.3))))))
+
+(defmethod on-write ((client http3-client))
+  )
