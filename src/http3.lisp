@@ -76,9 +76,10 @@
           (setf es-versions (logior es-versions (ash 1 (str->quic-version engine-version))))
           (when (not (eq 0 (lsquic-engine-check-settings engine-settings LSENG-HTTP errbuf bufsize)))
             (error 'invalid-settings))
-          (with-foreign-string (ll log-level)
-            (lsquic-set-log-level ll))
-          (lsquic-logger-init logger-if (weird-pointers:save :nil) (foreign-enum-value 'lsquic-logger-timestamp-style :LLTS-HHMMSSUS))
+          (when log-level
+            (with-foreign-string (ll log-level)
+              (lsquic-set-log-level ll))
+            (lsquic-logger-init (new-logger) (weird-pointers:save :nil) (foreign-enum-value 'lsquic-logger-timestamp-style :LLTS-HHMMSSUS)))
           (with-foreign-slots ((ea-settings ea-packets-out ea-packets-out-ctx ea-stream-if ea-stream-if-ctx) engine-api (:struct lsquic-engine-api))
             (setf ea-settings engine-settings)
             (setf ea-stream-if client-callbacks)
