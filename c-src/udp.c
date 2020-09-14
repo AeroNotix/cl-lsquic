@@ -62,7 +62,7 @@ recv_packets_in(struct lsquic_engine *engine, struct sockaddr *local_sas, int fd
     ssize_t nread;
     int ecn;
     struct sockaddr_storage peer_sas;
-    unsigned char buf[0x1000];
+    unsigned char buf[0x600];
     struct iovec vec[1] = {{ buf, sizeof(buf) }};
     unsigned char ctl_buf[CTL_SZ];
 
