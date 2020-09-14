@@ -148,4 +148,6 @@
            0.3))))))
 
 (defmethod on-write ((client http3-client))
-  )
+  (bordeaux-threads:with-lock-held ((process-conns-lock client))
+    (write-headers (headers client) client)
+    (write-body (body client) client)))

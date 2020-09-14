@@ -22,5 +22,11 @@
   `(with-pointer-to (,binding-form :int)
      ,@body))
 
-(defmacro safe-foreign-alloc (type)
-  `(static-vectors:fill-foreign-memory (foreign-alloc ,type) (foreign-type-size ,type) 0))
+(defun safe-foreign-alloc (type &key (count 1))
+  (static-vectors:fill-foreign-memory (foreign-alloc type :count count) (foreign-type-size type) 0))
+
+(defmacro with-initialize-foreign-struct (type &body body)
+  (let ((struct-field-names (foreign-slot-names `(:struct ,type))))
+  `(let ((s (safe-foreign-alloc '(:struct ,type))))
+     (with-foreign-slots (,struct-field-names s  '(:struct ,type))
+       ,@body))))
