@@ -137,9 +137,8 @@
       (setf (engine client) engine))))
 
 (defmethod close-client ((client client))
-  (with-slots (engine-settings engine-api) client
-    (foreign-free engine-settings)
-    (foreign-free engine-api)))
+  (with-slots (engine) client
+    (engine-destroy engine)))
 
 (defmethod process-conns ((client client))
   (bt:with-lock-held ((lock client))
