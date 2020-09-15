@@ -30,8 +30,8 @@
   (force-output)
   (let ((stream-ctx (conn-get-ctx (stream-conn lsquic-stream))))
     (when (not (eq (stream-is-pushed lsquic-stream) 0))
-      (stream-wantwrite lsquic-stream 1))
-    stream-if-ctx))
+      (stream-wantwrite lsquic-stream 1)
+      (weird-pointers:save (pop-stream-ctx (weird-pointers:restore stream-ctx))))))
 
 (defcallback cb-on-read :void ((lsquic-stream :pointer) (lsquic-stream-ctx :pointer))
   (format t "cb-on-read~%")
