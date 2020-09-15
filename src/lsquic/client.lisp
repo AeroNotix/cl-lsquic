@@ -30,7 +30,7 @@
    (request-queue   :initform '() :accessor request-queue)
    (host            :initarg :host :initform (error "You must supply a host to connect to"))
    (port            :initarg :port :initform 443)
-   (engine-version  :initarg :quic-version :initform (error "You are required to supply a QUIC protocol version string")
+   (engine-version  :initarg :quic-version :initform (error "You must supply a QUIC protocol version string")
                     :accessor engine-version)
    (engine-settings :initform (cffi-helpers:safe-foreign-alloc '(:struct engine-settings))
                     :accessor engine-settings)
