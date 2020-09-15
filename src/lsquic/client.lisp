@@ -43,7 +43,8 @@
   (sb-posix:write (output (weird-pointers:restore ctx)) buf len))
 
 (defclass client (socket)
-  ((rq-lock         :initform (bt:make-lock) :accessor rq-lock)
+  (;; This lock protects the request-queue
+   (rq-lock         :initform (bt:make-lock) :accessor rq-lock)
    (request-queue   :initform '() :accessor request-queue)
    (host            :initarg :host :initform (error "You must supply a host to connect to"))
    (port            :initarg :port :initform 443)
@@ -159,14 +160,21 @@
            (sb-ext:make-timer (lambda () (packets-in client)) :thread t)
            0.3))))))
 
-(defmethod on-write ((client client))
-  (write-headers (headers client) client)
-  (write-body (body client) client))
-
 (defmethod push-stream-ctx ((client client) ctx)
   (bt:with-lock-held ((rq-lock client))
-    (push (request-queue client) ctx)))
+    (push ctx (request-queue client))))
 
 (defmethod pop-stream-ctx ((client client))
   (bt:with-lock-held ((rq-lock client))
-    (pop (request-queue client) ctx)))
+    (pop (request-queue client))))
+
+(defmethod new-stream ((client client) ctx)
+  (let ((pipe (make-instance 'pipe :ctx ctx)))
+    (push-stream-ctx client pipe)
+    (conn-make-stream (quic-conn client))
+    pipe))
+
+(defmethod send-request ((client client) request)
+  (let ((pipe (new-stream client request)))
+     pipe))
+
