@@ -18,7 +18,7 @@ src/ffi.lisp: lsquic.i Makefile
 	swig -cffi -module ffi -outdir src/lsquic/ -I./lsquic/include/ lsquic.i
 
 src/ffi-dns.lisp: dns.i Makefile c-src/libdns.so
-	swig -cffi -module ffi-dns -outdir src/dns/ -I./c-src dns.i
+	swig -cffi -module ffi -outdir src/dns/ -I./c-src dns.i
 
 src/ffi-udp.lisp: udp.i Makefile c-src/libudp.so
-	swig -cffi -module ffi-udp -outdir src/udp -I./c-src udp.i
+	swig -cffi -module ffi -outdir src/udp -I./c-src udp.i
