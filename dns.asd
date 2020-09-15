@@ -4,5 +4,5 @@
   :licence "WTFPL"
   :serial t
   :description "Little CFFI functions"
-  :components ((:file "src/ffi-dns"))
+  :components ((:file "src/dns/ffi"))
   :depends-on (:cffi))

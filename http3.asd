@@ -4,10 +4,8 @@
   :licence "WTFPL"
   :serial t
   :description "FFI Bindings to litespeed QUIC"
-  :components ((:file "src/package")
-               (:file "src/ffi-dns")
-               (:file "src/ffi-udp")
-               (:file "src/http3"))
+  :components ((:file "src/http3/package")
+               (:file "src/http3/http3"))
   :depends-on (:bordeaux-threads
                :cffi
                :cffi-helpers

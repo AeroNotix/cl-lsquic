@@ -4,5 +4,5 @@
   :licence "WTFPL"
   :serial t
   :description "Little CFFI functions"
-  :components ((:file "src/ffi-udp"))
+  :components ((:file "src/udp/ffi"))
   :depends-on (:cffi))
