@@ -3,6 +3,6 @@
   :version "0.0.1"
   :licence "WTFPL"
   :serial t
-  :description "Little CFFI functions"
+  :description "Helpful UDP functions where Lisp doesn't efficiently do the right things"
   :components ((:file "src/udp/ffi"))
   :depends-on (:cffi))

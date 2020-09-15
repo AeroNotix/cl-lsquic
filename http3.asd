@@ -3,7 +3,7 @@
   :version "0.0.1"
   :licence "WTFPL"
   :serial t
-  :description "FFI Bindings to litespeed QUIC"
+  :description "High-level HTTP3 Client"
   :components ((:file "src/http3/package")
                (:file "src/http3/http3"))
   :depends-on (:bordeaux-threads
