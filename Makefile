@@ -4,6 +4,9 @@ BORINGSSL_COMMIT=251b5169fd44345f455438312ec4e18ae07fd58c
 
 all: ffi
 
+image:
+	sbcl --load save-executable.lisp
+
 clone:
 	git clone --recursive https://github.com/AeroNotix/lsquic.git
 	git clone https://boringssl.googlesource.com/boringssl
