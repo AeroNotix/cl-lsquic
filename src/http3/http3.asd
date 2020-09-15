@@ -4,8 +4,8 @@
   :licence "WTFPL"
   :serial t
   :description "High-level HTTP3 Client"
-  :components ((:file "src/http3/package")
-               (:file "src/http3/http3"))
+  :components ((:file "package")
+               (:file "http3"))
   :depends-on (:bordeaux-threads
                :cffi
                :cffi-helpers

@@ -4,6 +4,6 @@
   :licence "WTFPL"
   :serial t
   :description "Little CFFI functions"
-  :components ((:file "src/cffi-helpers/tyranny"))
+  :components ((:file "tyranny"))
   :depends-on (:cffi
                :static-vectors))

@@ -4,5 +4,5 @@
   :licence "WTFPL"
   :serial t
   :description "Helpful DNS functions where Lisp doesn't efficiently do the right things"
-  :components ((:file "src/dns/ffi"))
+  :components ((:file "ffi"))
   :depends-on (:cffi))
