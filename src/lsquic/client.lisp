@@ -110,18 +110,19 @@
       (let* ((version (str->quic-version engine-version))
              (udp-socket (create-udp-socket host :port port)))
         (setf socket udp-socket)
-        (let ((conn (lsquic:engine-connect engine
-                                           version
-                                           (local-sockaddr udp-socket)
-                                           (peer-sockaddr udp-socket)
-                                           peer-ctx
-                                           conn-ctx
-                                           host
-                                           0
-                                           (cffi:null-pointer)
-                                           zero
-                                           (cffi:null-pointer)
-                                           zero)))
+        (let ((conn (engine-connect
+                     engine
+                     version
+                     (local-sockaddr udp-socket)
+                     (peer-sockaddr udp-socket)
+                     peer-ctx
+                     conn-ctx
+                     host
+                     0
+                     (cffi:null-pointer)
+                     zero
+                     (cffi:null-pointer)
+                     zero)))
           (check-null-p conn)
           (setf quic-conn conn)))))
   (sb-ext:schedule-timer
