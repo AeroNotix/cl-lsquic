@@ -15,10 +15,10 @@ lsquic:
 ffi: src/ffi.lisp src/ffi-dns.lisp src/ffi-udp.lisp
 
 src/ffi.lisp: lsquic.i Makefile
-	swig -cffi -noswig-lisp -module ffi -outdir src -I./lsquic/include/ lsquic.i
+	swig -cffi -module ffi -outdir src -I./lsquic/include/ lsquic.i
 
 src/ffi-dns.lisp: dns.i Makefile c-src/libdns.so
-	swig -cffi -noswig-lisp -module ffi-dns -outdir src -I./c-src dns.i
+	swig -cffi -module ffi-dns -outdir src -I./c-src dns.i
 
 src/ffi-udp.lisp: udp.i Makefile c-src/libudp.so
-	swig -cffi -noswig-lisp -module ffi-udp -outdir src -I./c-src udp.i
+	swig -cffi -module ffi-udp -outdir src -I./c-src udp.i

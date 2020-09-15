@@ -8,305 +8,737 @@
 
 
 
-(cl:defconstant #.(lispify "MAX_CID_LEN" 'constant) 20)
+;;;SWIG wrapper code starts here
 
-(cl:defconstant #.(lispify "GQUIC_CID_LEN" 'constant) 8)
+(cl:defmacro defanonenum (cl:&body enums)
+   "Converts anonymous enums to defconstants."
+  `(cl:progn ,@(cl:loop for value in enums
+                        for index = 0 then (cl:1+ index)
+                        when (cl:listp value) do (cl:setf index (cl:second value)
+                                                          value (cl:first value))
+                        collect `(cl:defconstant ,value ,index))))
 
-(cffi:defcstruct #.(lispify "lsquic_cid_t" 'classname)
-	(#.(lispify "len" 'slotname) :pointer)
-	(#.(lispify "u_cid" 'slotname) :pointer))
+(cl:eval-when (:compile-toplevel :load-toplevel)
+  (cl:unless (cl:fboundp 'swig-lispify)
+    (cl:defun swig-lispify (name flag cl:&optional (package cl:*package*))
+      (cl:labels ((helper (lst last rest cl:&aux (c (cl:car lst)))
+                    (cl:cond
+                      ((cl:null lst)
+                       rest)
+                      ((cl:upper-case-p c)
+                       (helper (cl:cdr lst) 'upper
+                               (cl:case last
+                                 ((lower digit) (cl:list* c #\- rest))
+                                 (cl:t (cl:cons c rest)))))
+                      ((cl:lower-case-p c)
+                       (helper (cl:cdr lst) 'lower (cl:cons (cl:char-upcase c) rest)))
+                      ((cl:digit-char-p c)
+                       (helper (cl:cdr lst) 'digit 
+                               (cl:case last
+                                 ((upper lower) (cl:list* c #\- rest))
+                                 (cl:t (cl:cons c rest)))))
+                      ((cl:char-equal c #\_)
+                       (helper (cl:cdr lst) '_ (cl:cons #\- rest)))
+                      (cl:t
+                       (cl:error "Invalid character: ~A" c)))))
+        (cl:let ((fix (cl:case flag
+                        ((constant enumvalue) "+")
+                        (variable "*")
+                        (cl:t ""))))
+          (cl:intern
+           (cl:concatenate
+            'cl:string
+            fix
+            (cl:nreverse (helper (cl:concatenate 'cl:list name) cl:nil cl:nil))
+            fix)
+           package))))))
 
-(cffi:defcunion #.(lispify "lsquic_cid_u_cid" 'classname)
-	(#.(lispify "buf" 'slotname) :pointer :count 20)
-	(#.(lispify "id" 'slotname) :pointer))
+;;;SWIG wrapper code ends here
 
-(cl:defconstant #.(lispify "LSQUIC_MAJOR_VERSION" 'constant) 2)
 
-(cl:defconstant #.(lispify "LSQUIC_MINOR_VERSION" 'constant) 19)
+(cl:defconstant #.(chomp-lsquic "MAX_CID_LEN" 'constant) 20)
 
-(cl:defconstant #.(lispify "LSQUIC_PATCH_VERSION" 'constant) 10)
+(cl:export '#.(chomp-lsquic "MAX_CID_LEN" 'constant))
 
-(cl:defconstant #.(lispify "LSENG_SERVER" 'constant) (cl:ash 1 0))
+(cl:defconstant #.(chomp-lsquic "GQUIC_CID_LEN" 'constant) 8)
 
-(cl:defconstant #.(lispify "LSENG_HTTP" 'constant) (cl:ash 1 1))
+(cl:export '#.(chomp-lsquic "GQUIC_CID_LEN" 'constant))
 
-(cl:defconstant #.(lispify "LSENG_HTTP_SERVER" 'constant) (cl:logior (cl:ash 1 0) (cl:ash 1 1)))
+(cffi:defcstruct #.(chomp-lsquic "lsquic_cid_t" 'classname)
+	(#.(chomp-lsquic "len" 'slotname) :pointer)
+	(#.(chomp-lsquic "u_cid" 'slotname) :pointer))
 
-(cffi:defcenum #.(lispify "lsquic_version" 'enumname)
-	#.(lispify "LSQVER_043" 'enumvalue :keyword)
-	#.(lispify "LSQVER_046" 'enumvalue :keyword)
-	#.(lispify "LSQVER_050" 'enumvalue :keyword)
-	#.(lispify "LSQVER_ID27" 'enumvalue :keyword)
-	#.(lispify "LSQVER_ID28" 'enumvalue :keyword)
-	#.(lispify "LSQVER_ID29" 'enumvalue :keyword)
-	#.(lispify "LSQVER_VERNEG" 'enumvalue :keyword)
-	#.(lispify "N_LSQVER" 'enumvalue :keyword))
+(cl:export '#.(chomp-lsquic "lsquic_cid_t" 'classname))
 
-(cl:defconstant #.(lispify "LSQUIC_DEPRECATED_VERSIONS" 'constant) 0)
+(cl:export '#.(chomp-lsquic "len" 'slotname))
 
-(cffi:defcenum #.(lispify "lsquic_hsk_status" 'enumname)
-	#.(lispify "LSQ_HSK_FAIL" 'enumvalue :keyword)
-	#.(lispify "LSQ_HSK_OK" 'enumvalue :keyword)
-	#.(lispify "LSQ_HSK_RESUMED_OK" 'enumvalue :keyword)
-	#.(lispify "LSQ_HSK_RESUMED_FAIL" 'enumvalue :keyword))
+(cl:export '#.(chomp-lsquic "u_cid" 'slotname))
 
-(cffi:defcstruct #.(lispify "lsquic_stream_if" 'classname)
-	(#.(lispify "on_new_conn" 'slotname) :pointer)
-	(#.(lispify "on_goaway_received" 'slotname) :pointer)
-	(#.(lispify "on_conn_closed" 'slotname) :pointer)
-	(#.(lispify "on_new_stream" 'slotname) :pointer)
-	(#.(lispify "on_read" 'slotname) :pointer)
-	(#.(lispify "on_write" 'slotname) :pointer)
-	(#.(lispify "on_close" 'slotname) :pointer)
-	(#.(lispify "on_hsk_done" 'slotname) :pointer)
-	(#.(lispify "on_new_token" 'slotname) :pointer)
-	(#.(lispify "on_sess_resume_info" 'slotname) :pointer))
+(cffi:defcunion #.(chomp-lsquic "lsquic_cid_u_cid" 'classname)
+	(#.(chomp-lsquic "buf" 'slotname) :pointer :count 20)
+	(#.(chomp-lsquic "id" 'slotname) :pointer))
 
-(cl:defconstant #.(lispify "LSQUIC_MIN_FCW" 'constant) (cl:* 16 1024))
+(cl:export '#.(chomp-lsquic "lsquic_cid_u_cid" 'classname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_CFCW_SERVER" 'constant) (cl:* 3 1024 (cl:/ 1024 2)))
+(cl:export '#.(chomp-lsquic "buf" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_CFCW_CLIENT" 'constant) (cl:* 15 1024 1024))
+(cl:export '#.(chomp-lsquic "id" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_SFCW_SERVER" 'constant) (cl:* 1 1024 1024))
+(cl:defconstant #.(chomp-lsquic "LSQUIC_MAJOR_VERSION" 'constant) 2)
 
-(cl:defconstant #.(lispify "LSQUIC_DF_SFCW_CLIENT" 'constant) (cl:* 6 1024 1024))
+(cl:export '#.(chomp-lsquic "LSQUIC_MAJOR_VERSION" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_MAX_STREAMS_IN" 'constant) 100)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_MINOR_VERSION" 'constant) 19)
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_DATA_SERVER" 'constant) (cl:* 3 1024 (cl:/ 1024 2)))
+(cl:export '#.(chomp-lsquic "LSQUIC_MINOR_VERSION" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_DATA_CLIENT" 'constant) (cl:* 15 1024 1024))
+(cl:defconstant #.(chomp-lsquic "LSQUIC_PATCH_VERSION" 'constant) 10)
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_REMOTE_SERVER" 'constant) (cl:* 1 1024 1024))
+(cl:export '#.(chomp-lsquic "LSQUIC_PATCH_VERSION" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_LOCAL_SERVER" 'constant) 0)
+(cl:defconstant #.(chomp-lsquic "LSENG_SERVER" 'constant) (cl:ash 1 0))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_REMOTE_CLIENT" 'constant) 0)
+(cl:export '#.(chomp-lsquic "LSENG_SERVER" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_LOCAL_CLIENT" 'constant) (cl:* 6 1024 1024))
+(cl:defconstant #.(chomp-lsquic "LSENG_HTTP" 'constant) (cl:ash 1 1))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_STREAMS_BIDI" 'constant) 100)
+(cl:export '#.(chomp-lsquic "LSENG_HTTP" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_STREAMS_UNI_CLIENT" 'constant) 100)
+(cl:defconstant #.(chomp-lsquic "LSENG_HTTP_SERVER" 'constant) (cl:logior (cl:ash 1 0) (cl:ash 1 1)))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_STREAMS_UNI_SERVER" 'constant) 3)
+(cl:export '#.(chomp-lsquic "LSENG_HTTP_SERVER" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_STREAM_DATA_UNI_CLIENT" 'constant) (cl:* 32 1024))
+(cffi:defcenum #.(chomp-lsquic "lsquic_version" 'enumname)
+	#.(chomp-lsquic "LSQVER_043" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSQVER_046" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSQVER_050" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSQVER_ID27" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSQVER_ID28" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSQVER_ID29" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSQVER_VERNEG" 'enumvalue :keyword)
+	#.(chomp-lsquic "N_LSQVER" 'enumvalue :keyword))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_INIT_MAX_STREAM_DATA_UNI_SERVER" 'constant) (cl:* 12 1024))
+(cl:export '#.(chomp-lsquic "lsquic_version" 'enumname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_IDLE_TIMEOUT" 'constant) 30)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DEPRECATED_VERSIONS" 'constant) 0)
 
-(cl:defconstant #.(lispify "LSQUIC_DF_PING_PERIOD" 'constant) 15)
+(cl:export '#.(chomp-lsquic "LSQUIC_DEPRECATED_VERSIONS" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_HANDSHAKE_TO" 'constant) (cl:* 10 1000 1000))
+(cffi:defcenum #.(chomp-lsquic "lsquic_hsk_status" 'enumname)
+	#.(chomp-lsquic "LSQ_HSK_FAIL" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSQ_HSK_OK" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSQ_HSK_RESUMED_OK" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSQ_HSK_RESUMED_FAIL" 'enumvalue :keyword))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_IDLE_CONN_TO" 'constant) (cl:* 30 1000 1000))
+(cl:export '#.(chomp-lsquic "lsquic_hsk_status" 'enumname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_SILENT_CLOSE" 'constant) 1)
+(cffi:defcstruct #.(chomp-lsquic "lsquic_stream_if" 'classname)
+	(#.(chomp-lsquic "on_new_conn" 'slotname) :pointer)
+	(#.(chomp-lsquic "on_goaway_received" 'slotname) :pointer)
+	(#.(chomp-lsquic "on_conn_closed" 'slotname) :pointer)
+	(#.(chomp-lsquic "on_new_stream" 'slotname) :pointer)
+	(#.(chomp-lsquic "on_read" 'slotname) :pointer)
+	(#.(chomp-lsquic "on_write" 'slotname) :pointer)
+	(#.(chomp-lsquic "on_close" 'slotname) :pointer)
+	(#.(chomp-lsquic "on_hsk_done" 'slotname) :pointer)
+	(#.(chomp-lsquic "on_new_token" 'slotname) :pointer)
+	(#.(chomp-lsquic "on_sess_resume_info" 'slotname) :pointer))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_MAX_HEADER_LIST_SIZE" 'constant) 0)
+(cl:export '#.(chomp-lsquic "lsquic_stream_if" 'classname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_STTL" 'constant) 86400)
+(cl:export '#.(chomp-lsquic "on_new_conn" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_MAX_INCHOATE" 'constant) (cl:* 1 1000 1000))
+(cl:export '#.(chomp-lsquic "on_goaway_received" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_SUPPORT_NSTP" 'constant) 0)
+(cl:export '#.(chomp-lsquic "on_conn_closed" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_SUPPORT_PUSH" 'constant) 1)
+(cl:export '#.(chomp-lsquic "on_new_stream" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_SUPPORT_TCID0" 'constant) 1)
+(cl:export '#.(chomp-lsquic "on_read" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_HONOR_PRST" 'constant) 0)
+(cl:export '#.(chomp-lsquic "on_write" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_SEND_PRST" 'constant) 0)
+(cl:export '#.(chomp-lsquic "on_close" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_PROGRESS_CHECK" 'constant) 1000)
+(cl:export '#.(chomp-lsquic "on_hsk_done" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_RW_ONCE" 'constant) 0)
+(cl:export '#.(chomp-lsquic "on_new_token" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_PROC_TIME_THRESH" 'constant) 0)
+(cl:export '#.(chomp-lsquic "on_sess_resume_info" 'slotname))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_PACE_PACKETS" 'constant) 1)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_MIN_FCW" 'constant) (cl:* 16 1024))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_CLOCK_GRANULARITY" 'constant) 1000)
+(cl:export '#.(chomp-lsquic "LSQUIC_MIN_FCW" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_SCID_LEN" 'constant) 8)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_CFCW_SERVER" 'constant) (cl:* 3 1024 (cl:/ 1024 2)))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_SCID_ISS_RATE" 'constant) 60)
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_CFCW_SERVER" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_QPACK_DEC_MAX_BLOCKED" 'constant) 100)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_CFCW_CLIENT" 'constant) (cl:* 15 1024 1024))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_QPACK_DEC_MAX_SIZE" 'constant) 4096)
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_CFCW_CLIENT" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_QPACK_ENC_MAX_BLOCKED" 'constant) 100)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_SFCW_SERVER" 'constant) (cl:* 1 1024 1024))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_QPACK_ENC_MAX_SIZE" 'constant) 4096)
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_SFCW_SERVER" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_ECN" 'constant) 0)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_SFCW_CLIENT" 'constant) (cl:* 6 1024 1024))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_ALLOW_MIGRATION" 'constant) 1)
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_SFCW_CLIENT" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_QL_BITS" 'constant) 2)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_MAX_STREAMS_IN" 'constant) 100)
 
-(cl:defconstant #.(lispify "LSQUIC_DF_SPIN" 'constant) 1)
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_MAX_STREAMS_IN" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_DELAYED_ACKS" 'constant) 0)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_DATA_SERVER" 'constant) (cl:* 3 1024 (cl:/ 1024 2)))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_TIMESTAMPS" 'constant) 1)
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_DATA_SERVER" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_CC_ALGO" 'constant) 1)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_DATA_CLIENT" 'constant) (cl:* 15 1024 1024))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_MAX_UDP_PAYLOAD_SIZE_RX" 'constant) 0)
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_DATA_CLIENT" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_GREASE_QUIC_BIT" 'constant) 1)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_REMOTE_SERVER" 'constant) (cl:* 1 1024 1024))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_DPLPMTUD" 'constant) 1)
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_REMOTE_SERVER" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_BASE_PLPMTU" 'constant) 0)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_LOCAL_SERVER" 'constant) 0)
 
-(cl:defconstant #.(lispify "LSQUIC_DF_MAX_PLPMTU" 'constant) 0)
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_LOCAL_SERVER" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_NOPROGRESS_TIMEOUT_SERVER" 'constant) 60)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_REMOTE_CLIENT" 'constant) 0)
 
-(cl:defconstant #.(lispify "LSQUIC_DF_NOPROGRESS_TIMEOUT_CLIENT" 'constant) 0)
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_REMOTE_CLIENT" 'constant))
 
-(cl:defconstant #.(lispify "LSQUIC_DF_MTU_PROBE_TIMER" 'constant) 1000)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_LOCAL_CLIENT" 'constant) (cl:* 6 1024 1024))
 
-(cffi:defcstruct #.(lispify "lsquic_engine_settings" 'classname)
-	(#.(lispify "es_versions" 'slotname) :unsigned-int)
-	(#.(lispify "es_cfcw" 'slotname) :unsigned-int)
-	(#.(lispify "es_sfcw" 'slotname) :unsigned-int)
-	(#.(lispify "es_max_cfcw" 'slotname) :unsigned-int)
-	(#.(lispify "es_max_sfcw" 'slotname) :unsigned-int)
-	(#.(lispify "es_max_streams_in" 'slotname) :unsigned-int)
-	(#.(lispify "es_handshake_to" 'slotname) :unsigned-long)
-	(#.(lispify "es_idle_conn_to" 'slotname) :unsigned-long)
-	(#.(lispify "es_silent_close" 'slotname) :int)
-	(#.(lispify "es_max_header_list_size" 'slotname) :unsigned-int)
-	(#.(lispify "es_ua" 'slotname) :string)
-	(#.(lispify "es_sttl" 'slotname) :pointer)
-	(#.(lispify "es_pdmd" 'slotname) :pointer)
-	(#.(lispify "es_aead" 'slotname) :pointer)
-	(#.(lispify "es_kexs" 'slotname) :pointer)
-	(#.(lispify "es_max_inchoate" 'slotname) :unsigned-int)
-	(#.(lispify "es_support_push" 'slotname) :int)
-	(#.(lispify "es_support_tcid0" 'slotname) :int)
-	(#.(lispify "es_support_nstp" 'slotname) :int)
-	(#.(lispify "es_honor_prst" 'slotname) :int)
-	(#.(lispify "es_send_prst" 'slotname) :int)
-	(#.(lispify "es_progress_check" 'slotname) :unsigned-int)
-	(#.(lispify "es_rw_once" 'slotname) :int)
-	(#.(lispify "es_proc_time_thresh" 'slotname) :unsigned-int)
-	(#.(lispify "es_pace_packets" 'slotname) :int)
-	(#.(lispify "es_clock_granularity" 'slotname) :unsigned-int)
-	(#.(lispify "es_cc_algo" 'slotname) :unsigned-int)
-	(#.(lispify "es_noprogress_timeout" 'slotname) :unsigned-int)
-	(#.(lispify "es_init_max_data" 'slotname) :unsigned-int)
-	(#.(lispify "es_init_max_stream_data_bidi_remote" 'slotname) :unsigned-int)
-	(#.(lispify "es_init_max_stream_data_bidi_local" 'slotname) :unsigned-int)
-	(#.(lispify "es_init_max_stream_data_uni" 'slotname) :unsigned-int)
-	(#.(lispify "es_init_max_streams_bidi" 'slotname) :unsigned-int)
-	(#.(lispify "es_init_max_streams_uni" 'slotname) :unsigned-int)
-	(#.(lispify "es_idle_timeout" 'slotname) :unsigned-int)
-	(#.(lispify "es_ping_period" 'slotname) :unsigned-int)
-	(#.(lispify "es_scid_len" 'slotname) :unsigned-int)
-	(#.(lispify "es_scid_iss_rate" 'slotname) :unsigned-int)
-	(#.(lispify "es_qpack_dec_max_size" 'slotname) :unsigned-int)
-	(#.(lispify "es_qpack_dec_max_blocked" 'slotname) :unsigned-int)
-	(#.(lispify "es_qpack_enc_max_size" 'slotname) :unsigned-int)
-	(#.(lispify "es_qpack_enc_max_blocked" 'slotname) :unsigned-int)
-	(#.(lispify "es_ecn" 'slotname) :int)
-	(#.(lispify "es_allow_migration" 'slotname) :int)
-	(#.(lispify "es_ql_bits" 'slotname) :int)
-	(#.(lispify "es_spin" 'slotname) :int)
-	(#.(lispify "es_delayed_acks" 'slotname) :int)
-	(#.(lispify "es_timestamps" 'slotname) :int)
-	(#.(lispify "es_max_udp_payload_size_rx" 'slotname) :unsigned-short)
-	(#.(lispify "es_grease_quic_bit" 'slotname) :int)
-	(#.(lispify "es_dplpmtud" 'slotname) :int)
-	(#.(lispify "es_base_plpmtu" 'slotname) :unsigned-short)
-	(#.(lispify "es_max_plpmtu" 'slotname) :unsigned-short)
-	(#.(lispify "es_mtu_probe_timer" 'slotname) :unsigned-int))
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_BIDI_LOCAL_CLIENT" 'constant))
 
-(cffi:defcfun ("lsquic_engine_init_settings" #.(lispify "lsquic_engine_init_settings" 'function)) :void
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAMS_BIDI" 'constant) 100)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAMS_BIDI" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAMS_UNI_CLIENT" 'constant) 100)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAMS_UNI_CLIENT" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAMS_UNI_SERVER" 'constant) 3)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAMS_UNI_SERVER" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_UNI_CLIENT" 'constant) (cl:* 32 1024))
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_UNI_CLIENT" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_UNI_SERVER" 'constant) (cl:* 12 1024))
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_INIT_MAX_STREAM_DATA_UNI_SERVER" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_IDLE_TIMEOUT" 'constant) 30)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_IDLE_TIMEOUT" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_PING_PERIOD" 'constant) 15)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_PING_PERIOD" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_HANDSHAKE_TO" 'constant) (cl:* 10 1000 1000))
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_HANDSHAKE_TO" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_IDLE_CONN_TO" 'constant) (cl:* 30 1000 1000))
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_IDLE_CONN_TO" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_SILENT_CLOSE" 'constant) 1)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_SILENT_CLOSE" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_MAX_HEADER_LIST_SIZE" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_MAX_HEADER_LIST_SIZE" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_STTL" 'constant) 86400)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_STTL" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_MAX_INCHOATE" 'constant) (cl:* 1 1000 1000))
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_MAX_INCHOATE" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_SUPPORT_NSTP" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_SUPPORT_NSTP" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_SUPPORT_PUSH" 'constant) 1)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_SUPPORT_PUSH" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_SUPPORT_TCID0" 'constant) 1)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_SUPPORT_TCID0" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_HONOR_PRST" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_HONOR_PRST" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_SEND_PRST" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_SEND_PRST" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_PROGRESS_CHECK" 'constant) 1000)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_PROGRESS_CHECK" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_RW_ONCE" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_RW_ONCE" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_PROC_TIME_THRESH" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_PROC_TIME_THRESH" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_PACE_PACKETS" 'constant) 1)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_PACE_PACKETS" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_CLOCK_GRANULARITY" 'constant) 1000)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_CLOCK_GRANULARITY" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_SCID_LEN" 'constant) 8)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_SCID_LEN" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_SCID_ISS_RATE" 'constant) 60)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_SCID_ISS_RATE" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_QPACK_DEC_MAX_BLOCKED" 'constant) 100)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_QPACK_DEC_MAX_BLOCKED" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_QPACK_DEC_MAX_SIZE" 'constant) 4096)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_QPACK_DEC_MAX_SIZE" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_QPACK_ENC_MAX_BLOCKED" 'constant) 100)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_QPACK_ENC_MAX_BLOCKED" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_QPACK_ENC_MAX_SIZE" 'constant) 4096)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_QPACK_ENC_MAX_SIZE" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_ECN" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_ECN" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_ALLOW_MIGRATION" 'constant) 1)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_ALLOW_MIGRATION" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_QL_BITS" 'constant) 2)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_QL_BITS" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_SPIN" 'constant) 1)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_SPIN" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_DELAYED_ACKS" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_DELAYED_ACKS" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_TIMESTAMPS" 'constant) 1)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_TIMESTAMPS" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_CC_ALGO" 'constant) 1)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_CC_ALGO" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_MAX_UDP_PAYLOAD_SIZE_RX" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_MAX_UDP_PAYLOAD_SIZE_RX" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_GREASE_QUIC_BIT" 'constant) 1)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_GREASE_QUIC_BIT" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_DPLPMTUD" 'constant) 1)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_DPLPMTUD" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_BASE_PLPMTU" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_BASE_PLPMTU" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_MAX_PLPMTU" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_MAX_PLPMTU" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_NOPROGRESS_TIMEOUT_SERVER" 'constant) 60)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_NOPROGRESS_TIMEOUT_SERVER" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_NOPROGRESS_TIMEOUT_CLIENT" 'constant) 0)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_NOPROGRESS_TIMEOUT_CLIENT" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_DF_MTU_PROBE_TIMER" 'constant) 1000)
+
+(cl:export '#.(chomp-lsquic "LSQUIC_DF_MTU_PROBE_TIMER" 'constant))
+
+(cffi:defcstruct #.(chomp-lsquic "lsquic_engine_settings" 'classname)
+	(#.(chomp-lsquic "es_versions" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_cfcw" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_sfcw" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_max_cfcw" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_max_sfcw" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_max_streams_in" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_handshake_to" 'slotname) :unsigned-long)
+	(#.(chomp-lsquic "es_idle_conn_to" 'slotname) :unsigned-long)
+	(#.(chomp-lsquic "es_silent_close" 'slotname) :int)
+	(#.(chomp-lsquic "es_max_header_list_size" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_ua" 'slotname) :string)
+	(#.(chomp-lsquic "es_sttl" 'slotname) :pointer)
+	(#.(chomp-lsquic "es_pdmd" 'slotname) :pointer)
+	(#.(chomp-lsquic "es_aead" 'slotname) :pointer)
+	(#.(chomp-lsquic "es_kexs" 'slotname) :pointer)
+	(#.(chomp-lsquic "es_max_inchoate" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_support_push" 'slotname) :int)
+	(#.(chomp-lsquic "es_support_tcid0" 'slotname) :int)
+	(#.(chomp-lsquic "es_support_nstp" 'slotname) :int)
+	(#.(chomp-lsquic "es_honor_prst" 'slotname) :int)
+	(#.(chomp-lsquic "es_send_prst" 'slotname) :int)
+	(#.(chomp-lsquic "es_progress_check" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_rw_once" 'slotname) :int)
+	(#.(chomp-lsquic "es_proc_time_thresh" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_pace_packets" 'slotname) :int)
+	(#.(chomp-lsquic "es_clock_granularity" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_cc_algo" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_noprogress_timeout" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_init_max_data" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_init_max_stream_data_bidi_remote" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_init_max_stream_data_bidi_local" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_init_max_stream_data_uni" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_init_max_streams_bidi" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_init_max_streams_uni" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_idle_timeout" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_ping_period" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_scid_len" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_scid_iss_rate" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_qpack_dec_max_size" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_qpack_dec_max_blocked" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_qpack_enc_max_size" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_qpack_enc_max_blocked" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "es_ecn" 'slotname) :int)
+	(#.(chomp-lsquic "es_allow_migration" 'slotname) :int)
+	(#.(chomp-lsquic "es_ql_bits" 'slotname) :int)
+	(#.(chomp-lsquic "es_spin" 'slotname) :int)
+	(#.(chomp-lsquic "es_delayed_acks" 'slotname) :int)
+	(#.(chomp-lsquic "es_timestamps" 'slotname) :int)
+	(#.(chomp-lsquic "es_max_udp_payload_size_rx" 'slotname) :unsigned-short)
+	(#.(chomp-lsquic "es_grease_quic_bit" 'slotname) :int)
+	(#.(chomp-lsquic "es_dplpmtud" 'slotname) :int)
+	(#.(chomp-lsquic "es_base_plpmtu" 'slotname) :unsigned-short)
+	(#.(chomp-lsquic "es_max_plpmtu" 'slotname) :unsigned-short)
+	(#.(chomp-lsquic "es_mtu_probe_timer" 'slotname) :unsigned-int))
+
+(cl:export '#.(chomp-lsquic "lsquic_engine_settings" 'classname))
+
+(cl:export '#.(chomp-lsquic "es_versions" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_cfcw" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_sfcw" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_max_cfcw" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_max_sfcw" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_max_streams_in" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_handshake_to" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_idle_conn_to" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_silent_close" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_max_header_list_size" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_ua" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_sttl" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_pdmd" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_aead" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_kexs" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_max_inchoate" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_support_push" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_support_tcid0" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_support_nstp" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_honor_prst" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_send_prst" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_progress_check" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_rw_once" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_proc_time_thresh" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_pace_packets" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_clock_granularity" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_cc_algo" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_noprogress_timeout" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_init_max_data" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_init_max_stream_data_bidi_remote" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_init_max_stream_data_bidi_local" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_init_max_stream_data_uni" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_init_max_streams_bidi" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_init_max_streams_uni" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_idle_timeout" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_ping_period" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_scid_len" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_scid_iss_rate" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_qpack_dec_max_size" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_qpack_dec_max_blocked" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_qpack_enc_max_size" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_qpack_enc_max_blocked" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_ecn" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_allow_migration" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_ql_bits" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_spin" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_delayed_acks" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_timestamps" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_max_udp_payload_size_rx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_grease_quic_bit" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_dplpmtud" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_base_plpmtu" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_max_plpmtu" 'slotname))
+
+(cl:export '#.(chomp-lsquic "es_mtu_probe_timer" 'slotname))
+
+(cffi:defcfun ("lsquic_engine_init_settings" #.(chomp-lsquic "lsquic_engine_init_settings" 'function)) :void
   (arg0 :pointer)
   (lsquic_engine_flags :unsigned-int))
 
-(cffi:defcfun ("lsquic_engine_check_settings" #.(lispify "lsquic_engine_check_settings" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_engine_init_settings" 'function))
+
+(cffi:defcfun ("lsquic_engine_check_settings" #.(chomp-lsquic "lsquic_engine_check_settings" 'function)) :int
   (settings :pointer)
   (lsquic_engine_flags :unsigned-int)
   (err_buf :string)
   (err_buf_sz :pointer))
 
-(cffi:defcstruct #.(lispify "lsquic_out_spec" 'classname)
-	(#.(lispify "iov" 'slotname) :pointer)
-	(#.(lispify "iovlen" 'slotname) :pointer)
-	(#.(lispify "local_sa" 'slotname) :pointer)
-	(#.(lispify "dest_sa" 'slotname) :pointer)
-	(#.(lispify "peer_ctx" 'slotname) :pointer)
-	(#.(lispify "ecn" 'slotname) :int))
+(cl:export '#.(chomp-lsquic "lsquic_engine_check_settings" 'function))
 
-(cffi:defcstruct #.(lispify "lsquic_shared_hash_if" 'classname)
-	(#.(lispify "shi_insert" 'slotname) :pointer)
-	(#.(lispify "shi_delete" 'slotname) :pointer)
-	(#.(lispify "shi_lookup" 'slotname) :pointer))
+(cffi:defcstruct #.(chomp-lsquic "lsquic_out_spec" 'classname)
+	(#.(chomp-lsquic "iov" 'slotname) :pointer)
+	(#.(chomp-lsquic "iovlen" 'slotname) :pointer)
+	(#.(chomp-lsquic "local_sa" 'slotname) :pointer)
+	(#.(chomp-lsquic "dest_sa" 'slotname) :pointer)
+	(#.(chomp-lsquic "peer_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ecn" 'slotname) :int))
 
-(cffi:defcstruct #.(lispify "lsquic_packout_mem_if" 'classname)
-	(#.(lispify "pmi_allocate" 'slotname) :pointer)
-	(#.(lispify "pmi_release" 'slotname) :pointer)
-	(#.(lispify "pmi_return" 'slotname) :pointer))
+(cl:export '#.(chomp-lsquic "lsquic_out_spec" 'classname))
 
-(cffi:defcenum #.(lispify "lsquic_hsi_flag" 'enumname)
-	(#.(lispify "LSQUIC_HSI_HTTP1X" 'enumvalue :keyword) #.(cl:ash 1 1))
-	(#.(lispify "LSQUIC_HSI_HASH_NAME" 'enumvalue :keyword) #.(cl:ash 1 2))
-	(#.(lispify "LSQUIC_HSI_HASH_NAMEVAL" 'enumvalue :keyword) #.(cl:ash 1 3)))
+(cl:export '#.(chomp-lsquic "iov" 'slotname))
 
-(cffi:defcstruct #.(lispify "lsquic_hset_if" 'classname)
-	(#.(lispify "hsi_create_header_set" 'slotname) :pointer)
-	(#.(lispify "hsi_prepare_decode" 'slotname) :pointer)
-	(#.(lispify "hsi_process_header" 'slotname) :pointer)
-	(#.(lispify "hsi_discard_header_set" 'slotname) :pointer)
-	(#.(lispify "hsi_flags" 'slotname) #.(lispify "lsquic_hsi_flag" 'enumname)))
+(cl:export '#.(chomp-lsquic "iovlen" 'slotname))
 
-(cffi:defcstruct #.(lispify "lsquic_keylog_if" 'classname)
-	(#.(lispify "kli_open" 'slotname) :pointer)
-	(#.(lispify "kli_log_line" 'slotname) :pointer)
-	(#.(lispify "kli_close" 'slotname) :pointer))
+(cl:export '#.(chomp-lsquic "local_sa" 'slotname))
 
-(cffi:defcstruct #.(lispify "lsquic_engine_api" 'classname)
-	(#.(lispify "ea_settings" 'slotname) :pointer)
-	(#.(lispify "ea_stream_if" 'slotname) :pointer)
-	(#.(lispify "ea_stream_if_ctx" 'slotname) :pointer)
-	(#.(lispify "ea_packets_out" 'slotname) :pointer)
-	(#.(lispify "ea_packets_out_ctx" 'slotname) :pointer)
-	(#.(lispify "ea_lookup_cert" 'slotname) :pointer)
-	(#.(lispify "ea_cert_lu_ctx" 'slotname) :pointer)
-	(#.(lispify "ea_get_ssl_ctx" 'slotname) :pointer)
-	(#.(lispify "ea_shi" 'slotname) :pointer)
-	(#.(lispify "ea_shi_ctx" 'slotname) :pointer)
-	(#.(lispify "ea_pmi" 'slotname) :pointer)
-	(#.(lispify "ea_pmi_ctx" 'slotname) :pointer)
-	(#.(lispify "ea_new_scids" 'slotname) :pointer)
-	(#.(lispify "ea_live_scids" 'slotname) :pointer)
-	(#.(lispify "ea_old_scids" 'slotname) :pointer)
-	(#.(lispify "ea_cids_update_ctx" 'slotname) :pointer)
-	(#.(lispify "ea_verify_cert" 'slotname) :pointer)
-	(#.(lispify "ea_verify_ctx" 'slotname) :pointer)
-	(#.(lispify "ea_hsi_if" 'slotname) :pointer)
-	(#.(lispify "ea_hsi_ctx" 'slotname) :pointer)
-	(#.(lispify "ea_keylog_if" 'slotname) :pointer)
-	(#.(lispify "ea_keylog_ctx" 'slotname) :pointer)
-	(#.(lispify "ea_alpn" 'slotname) :string))
+(cl:export '#.(chomp-lsquic "dest_sa" 'slotname))
 
-(cffi:defcfun ("lsquic_engine_new" #.(lispify "lsquic_engine_new" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "peer_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ecn" 'slotname))
+
+(cffi:defcstruct #.(chomp-lsquic "lsquic_shared_hash_if" 'classname)
+	(#.(chomp-lsquic "shi_insert" 'slotname) :pointer)
+	(#.(chomp-lsquic "shi_delete" 'slotname) :pointer)
+	(#.(chomp-lsquic "shi_lookup" 'slotname) :pointer))
+
+(cl:export '#.(chomp-lsquic "lsquic_shared_hash_if" 'classname))
+
+(cl:export '#.(chomp-lsquic "shi_insert" 'slotname))
+
+(cl:export '#.(chomp-lsquic "shi_delete" 'slotname))
+
+(cl:export '#.(chomp-lsquic "shi_lookup" 'slotname))
+
+(cffi:defcstruct #.(chomp-lsquic "lsquic_packout_mem_if" 'classname)
+	(#.(chomp-lsquic "pmi_allocate" 'slotname) :pointer)
+	(#.(chomp-lsquic "pmi_release" 'slotname) :pointer)
+	(#.(chomp-lsquic "pmi_return" 'slotname) :pointer))
+
+(cl:export '#.(chomp-lsquic "lsquic_packout_mem_if" 'classname))
+
+(cl:export '#.(chomp-lsquic "pmi_allocate" 'slotname))
+
+(cl:export '#.(chomp-lsquic "pmi_release" 'slotname))
+
+(cl:export '#.(chomp-lsquic "pmi_return" 'slotname))
+
+(cffi:defcenum #.(chomp-lsquic "lsquic_hsi_flag" 'enumname)
+	(#.(chomp-lsquic "LSQUIC_HSI_HTTP1X" 'enumvalue :keyword) #.(cl:ash 1 1))
+	(#.(chomp-lsquic "LSQUIC_HSI_HASH_NAME" 'enumvalue :keyword) #.(cl:ash 1 2))
+	(#.(chomp-lsquic "LSQUIC_HSI_HASH_NAMEVAL" 'enumvalue :keyword) #.(cl:ash 1 3)))
+
+(cl:export '#.(chomp-lsquic "lsquic_hsi_flag" 'enumname))
+
+(cffi:defcstruct #.(chomp-lsquic "lsquic_hset_if" 'classname)
+	(#.(chomp-lsquic "hsi_create_header_set" 'slotname) :pointer)
+	(#.(chomp-lsquic "hsi_prepare_decode" 'slotname) :pointer)
+	(#.(chomp-lsquic "hsi_process_header" 'slotname) :pointer)
+	(#.(chomp-lsquic "hsi_discard_header_set" 'slotname) :pointer)
+	(#.(chomp-lsquic "hsi_flags" 'slotname) #.(chomp-lsquic "lsquic_hsi_flag" 'enumname)))
+
+(cl:export '#.(chomp-lsquic "lsquic_hset_if" 'classname))
+
+(cl:export '#.(chomp-lsquic "hsi_create_header_set" 'slotname))
+
+(cl:export '#.(chomp-lsquic "hsi_prepare_decode" 'slotname))
+
+(cl:export '#.(chomp-lsquic "hsi_process_header" 'slotname))
+
+(cl:export '#.(chomp-lsquic "hsi_discard_header_set" 'slotname))
+
+(cl:export '#.(chomp-lsquic "hsi_flags" 'slotname))
+
+(cffi:defcstruct #.(chomp-lsquic "lsquic_keylog_if" 'classname)
+	(#.(chomp-lsquic "kli_open" 'slotname) :pointer)
+	(#.(chomp-lsquic "kli_log_line" 'slotname) :pointer)
+	(#.(chomp-lsquic "kli_close" 'slotname) :pointer))
+
+(cl:export '#.(chomp-lsquic "lsquic_keylog_if" 'classname))
+
+(cl:export '#.(chomp-lsquic "kli_open" 'slotname))
+
+(cl:export '#.(chomp-lsquic "kli_log_line" 'slotname))
+
+(cl:export '#.(chomp-lsquic "kli_close" 'slotname))
+
+(cffi:defcstruct #.(chomp-lsquic "lsquic_engine_api" 'classname)
+	(#.(chomp-lsquic "ea_settings" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_stream_if" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_stream_if_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_packets_out" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_packets_out_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_lookup_cert" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_cert_lu_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_get_ssl_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_shi" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_shi_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_pmi" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_pmi_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_new_scids" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_live_scids" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_old_scids" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_cids_update_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_verify_cert" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_verify_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_hsi_if" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_hsi_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_keylog_if" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_keylog_ctx" 'slotname) :pointer)
+	(#.(chomp-lsquic "ea_alpn" 'slotname) :string))
+
+(cl:export '#.(chomp-lsquic "lsquic_engine_api" 'classname))
+
+(cl:export '#.(chomp-lsquic "ea_settings" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_stream_if" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_stream_if_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_packets_out" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_packets_out_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_lookup_cert" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_cert_lu_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_get_ssl_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_shi" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_shi_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_pmi" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_pmi_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_new_scids" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_live_scids" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_old_scids" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_cids_update_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_verify_cert" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_verify_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_hsi_if" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_hsi_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_keylog_if" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_keylog_ctx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "ea_alpn" 'slotname))
+
+(cffi:defcfun ("lsquic_engine_new" #.(chomp-lsquic "lsquic_engine_new" 'function)) :pointer
   (lsquic_engine_flags :unsigned-int)
   (api :pointer))
 
-(cffi:defcfun ("lsquic_engine_connect" #.(lispify "lsquic_engine_connect" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_engine_new" 'function))
+
+(cffi:defcfun ("lsquic_engine_connect" #.(chomp-lsquic "lsquic_engine_connect" 'function)) :pointer
   (arg0 :pointer)
-  (arg1 #.(lispify "lsquic_version" 'enumname))
+  (arg1 #.(chomp-lsquic "lsquic_version" 'enumname))
   (local_sa :pointer)
   (peer_sa :pointer)
   (peer_ctx :pointer)
@@ -318,7 +750,9 @@
   (token :pointer)
   (token_sz :pointer))
 
-(cffi:defcfun ("lsquic_engine_packet_in" #.(lispify "lsquic_engine_packet_in" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_engine_connect" 'function))
+
+(cffi:defcfun ("lsquic_engine_packet_in" #.(chomp-lsquic "lsquic_engine_packet_in" 'function)) :int
   (arg0 :pointer)
   (packet_in_data :pointer)
   (packet_in_size :pointer)
@@ -327,328 +761,526 @@
   (peer_ctx :pointer)
   (ecn :int))
 
-(cffi:defcfun ("lsquic_engine_process_conns" #.(lispify "lsquic_engine_process_conns" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsquic_engine_packet_in" 'function))
+
+(cffi:defcfun ("lsquic_engine_process_conns" #.(chomp-lsquic "lsquic_engine_process_conns" 'function)) :void
   (engine :pointer))
 
-(cffi:defcfun ("lsquic_engine_has_unsent_packets" #.(lispify "lsquic_engine_has_unsent_packets" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_engine_process_conns" 'function))
+
+(cffi:defcfun ("lsquic_engine_has_unsent_packets" #.(chomp-lsquic "lsquic_engine_has_unsent_packets" 'function)) :int
   (engine :pointer))
 
-(cffi:defcfun ("lsquic_engine_send_unsent_packets" #.(lispify "lsquic_engine_send_unsent_packets" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsquic_engine_has_unsent_packets" 'function))
+
+(cffi:defcfun ("lsquic_engine_send_unsent_packets" #.(chomp-lsquic "lsquic_engine_send_unsent_packets" 'function)) :void
   (engine :pointer))
 
-(cffi:defcfun ("lsquic_engine_destroy" #.(lispify "lsquic_engine_destroy" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsquic_engine_send_unsent_packets" 'function))
+
+(cffi:defcfun ("lsquic_engine_destroy" #.(chomp-lsquic "lsquic_engine_destroy" 'function)) :void
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_conn_n_avail_streams" #.(lispify "lsquic_conn_n_avail_streams" 'function)) :unsigned-int
+(cl:export '#.(chomp-lsquic "lsquic_engine_destroy" 'function))
+
+(cffi:defcfun ("lsquic_conn_n_avail_streams" #.(chomp-lsquic "lsquic_conn_n_avail_streams" 'function)) :unsigned-int
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_conn_make_stream" #.(lispify "lsquic_conn_make_stream" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsquic_conn_n_avail_streams" 'function))
+
+(cffi:defcfun ("lsquic_conn_make_stream" #.(chomp-lsquic "lsquic_conn_make_stream" 'function)) :void
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_conn_n_pending_streams" #.(lispify "lsquic_conn_n_pending_streams" 'function)) :unsigned-int
+(cl:export '#.(chomp-lsquic "lsquic_conn_make_stream" 'function))
+
+(cffi:defcfun ("lsquic_conn_n_pending_streams" #.(chomp-lsquic "lsquic_conn_n_pending_streams" 'function)) :unsigned-int
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_conn_cancel_pending_streams" #.(lispify "lsquic_conn_cancel_pending_streams" 'function)) :unsigned-int
+(cl:export '#.(chomp-lsquic "lsquic_conn_n_pending_streams" 'function))
+
+(cffi:defcfun ("lsquic_conn_cancel_pending_streams" #.(chomp-lsquic "lsquic_conn_cancel_pending_streams" 'function)) :unsigned-int
   (arg0 :pointer)
   (n :unsigned-int))
 
-(cffi:defcfun ("lsquic_conn_going_away" #.(lispify "lsquic_conn_going_away" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsquic_conn_cancel_pending_streams" 'function))
+
+(cffi:defcfun ("lsquic_conn_going_away" #.(chomp-lsquic "lsquic_conn_going_away" 'function)) :void
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_conn_close" #.(lispify "lsquic_conn_close" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsquic_conn_going_away" 'function))
+
+(cffi:defcfun ("lsquic_conn_close" #.(chomp-lsquic "lsquic_conn_close" 'function)) :void
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_stream_wantread" #.(lispify "lsquic_stream_wantread" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_conn_close" 'function))
+
+(cffi:defcfun ("lsquic_stream_wantread" #.(chomp-lsquic "lsquic_stream_wantread" 'function)) :int
   (s :pointer)
   (is_want :int))
 
-(cffi:defcfun ("lsquic_stream_read" #.(lispify "lsquic_stream_read" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_wantread" 'function))
+
+(cffi:defcfun ("lsquic_stream_read" #.(chomp-lsquic "lsquic_stream_read" 'function)) :pointer
   (s :pointer)
   (buf :pointer)
   (len :pointer))
 
-(cffi:defcfun ("lsquic_stream_readv" #.(lispify "lsquic_stream_readv" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_read" 'function))
+
+(cffi:defcfun ("lsquic_stream_readv" #.(chomp-lsquic "lsquic_stream_readv" 'function)) :pointer
   (s :pointer)
   (vec :pointer)
   (iovcnt :int))
 
-(cffi:defcfun ("lsquic_stream_readf" #.(lispify "lsquic_stream_readf" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_readv" 'function))
+
+(cffi:defcfun ("lsquic_stream_readf" #.(chomp-lsquic "lsquic_stream_readf" 'function)) :pointer
   (s :pointer)
   (readf :pointer)
   (ctx :pointer))
 
-(cffi:defcfun ("lsquic_stream_wantwrite" #.(lispify "lsquic_stream_wantwrite" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_stream_readf" 'function))
+
+(cffi:defcfun ("lsquic_stream_wantwrite" #.(chomp-lsquic "lsquic_stream_wantwrite" 'function)) :int
   (s :pointer)
   (is_want :int))
 
-(cffi:defcfun ("lsquic_stream_write" #.(lispify "lsquic_stream_write" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_wantwrite" 'function))
+
+(cffi:defcfun ("lsquic_stream_write" #.(chomp-lsquic "lsquic_stream_write" 'function)) :pointer
   (s :pointer)
   (buf :pointer)
   (len :pointer))
 
-(cffi:defcfun ("lsquic_stream_writev" #.(lispify "lsquic_stream_writev" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_write" 'function))
+
+(cffi:defcfun ("lsquic_stream_writev" #.(chomp-lsquic "lsquic_stream_writev" 'function)) :pointer
   (s :pointer)
   (vec :pointer)
   (count :int))
 
-(cffi:defcfun ("lsquic_stream_pwritev" #.(lispify "lsquic_stream_pwritev" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_writev" 'function))
+
+(cffi:defcfun ("lsquic_stream_pwritev" #.(chomp-lsquic "lsquic_stream_pwritev" 'function)) :pointer
   (s :pointer)
   (preadv :pointer)
   (user_data :pointer)
   (n_to_write :pointer))
 
-(cffi:defcstruct #.(lispify "lsquic_reader" 'classname)
-	(#.(lispify "lsqr_read" 'slotname) :pointer)
-	(#.(lispify "lsqr_size" 'slotname) :pointer)
-	(#.(lispify "lsqr_ctx" 'slotname) :pointer))
+(cl:export '#.(chomp-lsquic "lsquic_stream_pwritev" 'function))
 
-(cffi:defcfun ("lsquic_stream_writef" #.(lispify "lsquic_stream_writef" 'function)) :pointer
+(cffi:defcstruct #.(chomp-lsquic "lsquic_reader" 'classname)
+	(#.(chomp-lsquic "lsqr_read" 'slotname) :pointer)
+	(#.(chomp-lsquic "lsqr_size" 'slotname) :pointer)
+	(#.(chomp-lsquic "lsqr_ctx" 'slotname) :pointer))
+
+(cl:export '#.(chomp-lsquic "lsquic_reader" 'classname))
+
+(cl:export '#.(chomp-lsquic "lsqr_read" 'slotname))
+
+(cl:export '#.(chomp-lsquic "lsqr_size" 'slotname))
+
+(cl:export '#.(chomp-lsquic "lsqr_ctx" 'slotname))
+
+(cffi:defcfun ("lsquic_stream_writef" #.(chomp-lsquic "lsquic_stream_writef" 'function)) :pointer
   (arg0 :pointer)
   (arg1 :pointer))
 
-(cffi:defcfun ("lsquic_stream_flush" #.(lispify "lsquic_stream_flush" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_stream_writef" 'function))
+
+(cffi:defcfun ("lsquic_stream_flush" #.(chomp-lsquic "lsquic_stream_flush" 'function)) :int
   (s :pointer))
 
-(cffi:defcstruct #.(lispify "lsquic_http_headers" 'classname)
-	(#.(lispify "count" 'slotname) :int)
-	(#.(lispify "headers" 'slotname) :pointer))
+(cl:export '#.(chomp-lsquic "lsquic_stream_flush" 'function))
 
-(cffi:defcfun ("lsquic_stream_send_headers" #.(lispify "lsquic_stream_send_headers" 'function)) :int
+(cffi:defcstruct #.(chomp-lsquic "lsquic_http_headers" 'classname)
+	(#.(chomp-lsquic "count" 'slotname) :int)
+	(#.(chomp-lsquic "headers" 'slotname) :pointer))
+
+(cl:export '#.(chomp-lsquic "lsquic_http_headers" 'classname))
+
+(cl:export '#.(chomp-lsquic "count" 'slotname))
+
+(cl:export '#.(chomp-lsquic "headers" 'slotname))
+
+(cffi:defcfun ("lsquic_stream_send_headers" #.(chomp-lsquic "lsquic_stream_send_headers" 'function)) :int
   (s :pointer)
   (headers :pointer)
   (eos :int))
 
-(cffi:defcfun ("lsquic_stream_get_hset" #.(lispify "lsquic_stream_get_hset" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_send_headers" 'function))
+
+(cffi:defcfun ("lsquic_stream_get_hset" #.(chomp-lsquic "lsquic_stream_get_hset" 'function)) :pointer
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_conn_push_stream" #.(lispify "lsquic_conn_push_stream" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_stream_get_hset" 'function))
+
+(cffi:defcfun ("lsquic_conn_push_stream" #.(chomp-lsquic "lsquic_conn_push_stream" 'function)) :int
   (c :pointer)
   (hdr_set :pointer)
   (s :pointer)
   (headers :pointer))
 
-(cffi:defcfun ("lsquic_conn_is_push_enabled" #.(lispify "lsquic_conn_is_push_enabled" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_conn_push_stream" 'function))
+
+(cffi:defcfun ("lsquic_conn_is_push_enabled" #.(chomp-lsquic "lsquic_conn_is_push_enabled" 'function)) :int
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_stream_shutdown" #.(lispify "lsquic_stream_shutdown" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_conn_is_push_enabled" 'function))
+
+(cffi:defcfun ("lsquic_stream_shutdown" #.(chomp-lsquic "lsquic_stream_shutdown" 'function)) :int
   (s :pointer)
   (how :int))
 
-(cffi:defcfun ("lsquic_stream_close" #.(lispify "lsquic_stream_close" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_stream_shutdown" 'function))
+
+(cffi:defcfun ("lsquic_stream_close" #.(chomp-lsquic "lsquic_stream_close" 'function)) :int
   (s :pointer))
 
-(cffi:defcfun ("lsquic_conn_get_server_cert_chain" #.(lispify "lsquic_conn_get_server_cert_chain" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_close" 'function))
+
+(cffi:defcfun ("lsquic_conn_get_server_cert_chain" #.(chomp-lsquic "lsquic_conn_get_server_cert_chain" 'function)) :pointer
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_stream_id" #.(lispify "lsquic_stream_id" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_conn_get_server_cert_chain" 'function))
+
+(cffi:defcfun ("lsquic_stream_id" #.(chomp-lsquic "lsquic_stream_id" 'function)) :pointer
   (s :pointer))
 
-(cffi:defcfun ("lsquic_stream_get_ctx" #.(lispify "lsquic_stream_get_ctx" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_id" 'function))
+
+(cffi:defcfun ("lsquic_stream_get_ctx" #.(chomp-lsquic "lsquic_stream_get_ctx" 'function)) :pointer
   (s :pointer))
 
-(cffi:defcfun ("lsquic_stream_is_pushed" #.(lispify "lsquic_stream_is_pushed" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_stream_get_ctx" 'function))
+
+(cffi:defcfun ("lsquic_stream_is_pushed" #.(chomp-lsquic "lsquic_stream_is_pushed" 'function)) :int
   (s :pointer))
 
-(cffi:defcfun ("lsquic_stream_is_rejected" #.(lispify "lsquic_stream_is_rejected" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_stream_is_pushed" 'function))
+
+(cffi:defcfun ("lsquic_stream_is_rejected" #.(chomp-lsquic "lsquic_stream_is_rejected" 'function)) :int
   (s :pointer))
 
-(cffi:defcfun ("lsquic_stream_refuse_push" #.(lispify "lsquic_stream_refuse_push" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_stream_is_rejected" 'function))
+
+(cffi:defcfun ("lsquic_stream_refuse_push" #.(chomp-lsquic "lsquic_stream_refuse_push" 'function)) :int
   (s :pointer))
 
-(cffi:defcfun ("lsquic_stream_push_info" #.(lispify "lsquic_stream_push_info" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_stream_refuse_push" 'function))
+
+(cffi:defcfun ("lsquic_stream_push_info" #.(chomp-lsquic "lsquic_stream_push_info" 'function)) :int
   (arg0 :pointer)
   (ref_stream_id :pointer)
   (hdr_set :pointer))
 
-(cffi:defcfun ("lsquic_stream_priority" #.(lispify "lsquic_stream_priority" 'function)) :unsigned-int
+(cl:export '#.(chomp-lsquic "lsquic_stream_push_info" 'function))
+
+(cffi:defcfun ("lsquic_stream_priority" #.(chomp-lsquic "lsquic_stream_priority" 'function)) :unsigned-int
   (s :pointer))
 
-(cffi:defcfun ("lsquic_stream_set_priority" #.(lispify "lsquic_stream_set_priority" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_stream_priority" 'function))
+
+(cffi:defcfun ("lsquic_stream_set_priority" #.(chomp-lsquic "lsquic_stream_set_priority" 'function)) :int
   (s :pointer)
   (priority :unsigned-int))
 
-(cffi:defcfun ("lsquic_stream_conn" #.(lispify "lsquic_stream_conn" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_set_priority" 'function))
+
+(cffi:defcfun ("lsquic_stream_conn" #.(chomp-lsquic "lsquic_stream_conn" 'function)) :pointer
   (s :pointer))
 
-(cffi:defcfun ("lsquic_conn_id" #.(lispify "lsquic_conn_id" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_stream_conn" 'function))
+
+(cffi:defcfun ("lsquic_conn_id" #.(chomp-lsquic "lsquic_conn_id" 'function)) :pointer
   (c :pointer))
 
-(cffi:defcfun ("lsquic_conn_get_engine" #.(lispify "lsquic_conn_get_engine" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_conn_id" 'function))
+
+(cffi:defcfun ("lsquic_conn_get_engine" #.(chomp-lsquic "lsquic_conn_get_engine" 'function)) :pointer
   (c :pointer))
 
-(cffi:defcfun ("lsquic_conn_get_sockaddr" #.(lispify "lsquic_conn_get_sockaddr" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_conn_get_engine" 'function))
+
+(cffi:defcfun ("lsquic_conn_get_sockaddr" #.(chomp-lsquic "lsquic_conn_get_sockaddr" 'function)) :int
   (c :pointer)
   (local :pointer)
   (peer :pointer))
 
-(cffi:defcstruct #.(lispify "lsquic_logger_if" 'classname)
-	(#.(lispify "log_buf" 'slotname) :pointer))
+(cl:export '#.(chomp-lsquic "lsquic_conn_get_sockaddr" 'function))
 
-(cffi:defcenum #.(lispify "lsquic_logger_timestamp_style" 'enumname)
-	#.(lispify "LLTS_NONE" 'enumvalue :keyword)
-	#.(lispify "LLTS_HHMMSSMS" 'enumvalue :keyword)
-	#.(lispify "LLTS_YYYYMMDD_HHMMSSMS" 'enumvalue :keyword)
-	#.(lispify "LLTS_CHROMELIKE" 'enumvalue :keyword)
-	#.(lispify "LLTS_HHMMSSUS" 'enumvalue :keyword)
-	#.(lispify "LLTS_YYYYMMDD_HHMMSSUS" 'enumvalue :keyword)
-	#.(lispify "N_LLTS" 'enumvalue :keyword))
+(cffi:defcstruct #.(chomp-lsquic "lsquic_logger_if" 'classname)
+	(#.(chomp-lsquic "log_buf" 'slotname) :pointer))
 
-(cffi:defcfun ("lsquic_logger_init" #.(lispify "lsquic_logger_init" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsquic_logger_if" 'classname))
+
+(cl:export '#.(chomp-lsquic "log_buf" 'slotname))
+
+(cffi:defcenum #.(chomp-lsquic "lsquic_logger_timestamp_style" 'enumname)
+	#.(chomp-lsquic "LLTS_NONE" 'enumvalue :keyword)
+	#.(chomp-lsquic "LLTS_HHMMSSMS" 'enumvalue :keyword)
+	#.(chomp-lsquic "LLTS_YYYYMMDD_HHMMSSMS" 'enumvalue :keyword)
+	#.(chomp-lsquic "LLTS_CHROMELIKE" 'enumvalue :keyword)
+	#.(chomp-lsquic "LLTS_HHMMSSUS" 'enumvalue :keyword)
+	#.(chomp-lsquic "LLTS_YYYYMMDD_HHMMSSUS" 'enumvalue :keyword)
+	#.(chomp-lsquic "N_LLTS" 'enumvalue :keyword))
+
+(cl:export '#.(chomp-lsquic "lsquic_logger_timestamp_style" 'enumname))
+
+(cffi:defcfun ("lsquic_logger_init" #.(chomp-lsquic "lsquic_logger_init" 'function)) :void
   (arg0 :pointer)
   (logger_ctx :pointer)
-  (arg2 #.(lispify "lsquic_logger_timestamp_style" 'enumname)))
+  (arg2 #.(chomp-lsquic "lsquic_logger_timestamp_style" 'enumname)))
 
-(cffi:defcfun ("lsquic_set_log_level" #.(lispify "lsquic_set_log_level" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_logger_init" 'function))
+
+(cffi:defcfun ("lsquic_set_log_level" #.(chomp-lsquic "lsquic_set_log_level" 'function)) :int
   (log_level :string))
 
-(cffi:defcfun ("lsquic_logger_lopt" #.(lispify "lsquic_logger_lopt" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_set_log_level" 'function))
+
+(cffi:defcfun ("lsquic_logger_lopt" #.(chomp-lsquic "lsquic_logger_lopt" 'function)) :int
   (optarg :string))
 
-(cffi:defcfun ("lsquic_engine_quic_versions" #.(lispify "lsquic_engine_quic_versions" 'function)) :unsigned-int
+(cl:export '#.(chomp-lsquic "lsquic_logger_lopt" 'function))
+
+(cffi:defcfun ("lsquic_engine_quic_versions" #.(chomp-lsquic "lsquic_engine_quic_versions" 'function)) :unsigned-int
   (arg0 :pointer))
 
-(cl:defconstant #.(lispify "LSQUIC_GLOBAL_CLIENT" 'constant) (cl:ash 1 0))
+(cl:export '#.(chomp-lsquic "lsquic_engine_quic_versions" 'function))
 
-(cl:defconstant #.(lispify "LSQUIC_GLOBAL_SERVER" 'constant) (cl:ash 1 1))
+(cl:defconstant #.(chomp-lsquic "LSQUIC_GLOBAL_CLIENT" 'constant) (cl:ash 1 0))
 
-(cffi:defcfun ("lsquic_global_init" #.(lispify "lsquic_global_init" 'function)) :int
+(cl:export '#.(chomp-lsquic "LSQUIC_GLOBAL_CLIENT" 'constant))
+
+(cl:defconstant #.(chomp-lsquic "LSQUIC_GLOBAL_SERVER" 'constant) (cl:ash 1 1))
+
+(cl:export '#.(chomp-lsquic "LSQUIC_GLOBAL_SERVER" 'constant))
+
+(cffi:defcfun ("lsquic_global_init" #.(chomp-lsquic "lsquic_global_init" 'function)) :int
   (flags :int))
 
-(cffi:defcfun ("lsquic_global_cleanup" #.(lispify "lsquic_global_cleanup" 'function)) :void)
+(cl:export '#.(chomp-lsquic "lsquic_global_init" 'function))
 
-(cffi:defcfun ("lsquic_conn_quic_version" #.(lispify "lsquic_conn_quic_version" 'function)) #.(lispify "lsquic_version" 'enumname)
+(cffi:defcfun ("lsquic_global_cleanup" #.(chomp-lsquic "lsquic_global_cleanup" 'function)) :void)
+
+(cl:export '#.(chomp-lsquic "lsquic_global_cleanup" 'function))
+
+(cffi:defcfun ("lsquic_conn_quic_version" #.(chomp-lsquic "lsquic_conn_quic_version" 'function)) #.(chomp-lsquic "lsquic_version" 'enumname)
   (c :pointer))
 
-(cffi:defcfun ("lsquic_conn_crypto_keysize" #.(lispify "lsquic_conn_crypto_keysize" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_conn_quic_version" 'function))
+
+(cffi:defcfun ("lsquic_conn_crypto_keysize" #.(chomp-lsquic "lsquic_conn_crypto_keysize" 'function)) :int
   (c :pointer))
 
-(cffi:defcfun ("lsquic_conn_crypto_alg_keysize" #.(lispify "lsquic_conn_crypto_alg_keysize" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_conn_crypto_keysize" 'function))
+
+(cffi:defcfun ("lsquic_conn_crypto_alg_keysize" #.(chomp-lsquic "lsquic_conn_crypto_alg_keysize" 'function)) :int
   (c :pointer))
 
-(cffi:defcenum #.(lispify "lsquic_crypto_ver" 'enumname)
-	#.(lispify "LSQ_CRY_QUIC" 'enumvalue :keyword)
-	#.(lispify "LSQ_CRY_TLSv13" 'enumvalue :keyword))
+(cl:export '#.(chomp-lsquic "lsquic_conn_crypto_alg_keysize" 'function))
 
-(cffi:defcfun ("lsquic_conn_crypto_ver" #.(lispify "lsquic_conn_crypto_ver" 'function)) #.(lispify "lsquic_crypto_ver" 'enumname)
+(cffi:defcenum #.(chomp-lsquic "lsquic_crypto_ver" 'enumname)
+	#.(chomp-lsquic "LSQ_CRY_QUIC" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSQ_CRY_TLSv13" 'enumvalue :keyword))
+
+(cl:export '#.(chomp-lsquic "lsquic_crypto_ver" 'enumname))
+
+(cffi:defcfun ("lsquic_conn_crypto_ver" #.(chomp-lsquic "lsquic_conn_crypto_ver" 'function)) #.(chomp-lsquic "lsquic_crypto_ver" 'enumname)
   (c :pointer))
 
-(cffi:defcfun ("lsquic_conn_crypto_cipher" #.(lispify "lsquic_conn_crypto_cipher" 'function)) :string
+(cl:export '#.(chomp-lsquic "lsquic_conn_crypto_ver" 'function))
+
+(cffi:defcfun ("lsquic_conn_crypto_cipher" #.(chomp-lsquic "lsquic_conn_crypto_cipher" 'function)) :string
   (c :pointer))
 
-(cffi:defcfun ("lsquic_str2ver" #.(lispify "lsquic_str2ver" 'function)) #.(lispify "lsquic_version" 'enumname)
+(cl:export '#.(chomp-lsquic "lsquic_conn_crypto_cipher" 'function))
+
+(cffi:defcfun ("lsquic_str2ver" #.(chomp-lsquic "lsquic_str2ver" 'function)) #.(chomp-lsquic "lsquic_version" 'enumname)
   (str :string)
   (len :pointer))
 
-(cffi:defcfun ("lsquic_alpn2ver" #.(lispify "lsquic_alpn2ver" 'function)) #.(lispify "lsquic_version" 'enumname)
+(cl:export '#.(chomp-lsquic "lsquic_str2ver" 'function))
+
+(cffi:defcfun ("lsquic_alpn2ver" #.(chomp-lsquic "lsquic_alpn2ver" 'function)) #.(chomp-lsquic "lsquic_version" 'enumname)
   (alpn :string)
   (len :pointer))
 
-(cffi:defcfun ("lsquic_engine_cooldown" #.(lispify "lsquic_engine_cooldown" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsquic_alpn2ver" 'function))
+
+(cffi:defcfun ("lsquic_engine_cooldown" #.(chomp-lsquic "lsquic_engine_cooldown" 'function)) :void
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_conn_get_ctx" #.(lispify "lsquic_conn_get_ctx" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_engine_cooldown" 'function))
+
+(cffi:defcfun ("lsquic_conn_get_ctx" #.(chomp-lsquic "lsquic_conn_get_ctx" 'function)) :pointer
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_conn_set_ctx" #.(lispify "lsquic_conn_set_ctx" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsquic_conn_get_ctx" 'function))
+
+(cffi:defcfun ("lsquic_conn_set_ctx" #.(chomp-lsquic "lsquic_conn_set_ctx" 'function)) :void
   (arg0 :pointer)
   (arg1 :pointer))
 
-(cffi:defcfun ("lsquic_conn_get_peer_ctx" #.(lispify "lsquic_conn_get_peer_ctx" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_conn_set_ctx" 'function))
+
+(cffi:defcfun ("lsquic_conn_get_peer_ctx" #.(chomp-lsquic "lsquic_conn_get_peer_ctx" 'function)) :pointer
   (arg0 :pointer)
   (local_sa :pointer))
 
-(cffi:defcfun ("lsquic_conn_abort" #.(lispify "lsquic_conn_abort" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsquic_conn_get_peer_ctx" 'function))
+
+(cffi:defcfun ("lsquic_conn_abort" #.(chomp-lsquic "lsquic_conn_abort" 'function)) :void
   (arg0 :pointer))
 
-(cffi:defcfun ("lsquic_get_alt_svc_versions" #.(lispify "lsquic_get_alt_svc_versions" 'function)) :string
+(cl:export '#.(chomp-lsquic "lsquic_conn_abort" 'function))
+
+(cffi:defcfun ("lsquic_get_alt_svc_versions" #.(chomp-lsquic "lsquic_get_alt_svc_versions" 'function)) :string
   (versions :unsigned-int))
 
-(cffi:defcfun ("lsquic_get_h3_alpns" #.(lispify "lsquic_get_h3_alpns" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsquic_get_alt_svc_versions" 'function))
+
+(cffi:defcfun ("lsquic_get_h3_alpns" #.(chomp-lsquic "lsquic_get_h3_alpns" 'function)) :pointer
   (versions :unsigned-int))
 
-(cffi:defcfun ("lsquic_is_valid_hs_packet" #.(lispify "lsquic_is_valid_hs_packet" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_get_h3_alpns" 'function))
+
+(cffi:defcfun ("lsquic_is_valid_hs_packet" #.(chomp-lsquic "lsquic_is_valid_hs_packet" 'function)) :int
   (arg0 :pointer)
   (arg1 :pointer)
   (arg2 :pointer))
 
-(cffi:defcfun ("lsquic_cid_from_packet" #.(lispify "lsquic_cid_from_packet" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_is_valid_hs_packet" 'function))
+
+(cffi:defcfun ("lsquic_cid_from_packet" #.(chomp-lsquic "lsquic_cid_from_packet" 'function)) :int
   (arg0 :pointer)
   (bufsz :pointer)
   (cid :pointer))
 
-(cffi:defcfun ("lsquic_engine_earliest_adv_tick" #.(lispify "lsquic_engine_earliest_adv_tick" 'function)) :int
+(cl:export '#.(chomp-lsquic "lsquic_cid_from_packet" 'function))
+
+(cffi:defcfun ("lsquic_engine_earliest_adv_tick" #.(chomp-lsquic "lsquic_engine_earliest_adv_tick" 'function)) :int
   (engine :pointer)
   (diff (:pointer :int)))
 
-(cffi:defcfun ("lsquic_engine_count_attq" #.(lispify "lsquic_engine_count_attq" 'function)) :unsigned-int
+(cl:export '#.(chomp-lsquic "lsquic_engine_earliest_adv_tick" 'function))
+
+(cffi:defcfun ("lsquic_engine_count_attq" #.(chomp-lsquic "lsquic_engine_count_attq" 'function)) :unsigned-int
   (engine :pointer)
   (from_now :int))
 
-(cffi:defcenum #.(lispify "LSQUIC_CONN_STATUS" 'enumname)
-	#.(lispify "LSCONN_ST_HSK_IN_PROGRESS" 'enumvalue :keyword)
-	#.(lispify "LSCONN_ST_CONNECTED" 'enumvalue :keyword)
-	#.(lispify "LSCONN_ST_HSK_FAILURE" 'enumvalue :keyword)
-	#.(lispify "LSCONN_ST_GOING_AWAY" 'enumvalue :keyword)
-	#.(lispify "LSCONN_ST_TIMED_OUT" 'enumvalue :keyword)
-	#.(lispify "LSCONN_ST_RESET" 'enumvalue :keyword)
-	#.(lispify "LSCONN_ST_USER_ABORTED" 'enumvalue :keyword)
-	#.(lispify "LSCONN_ST_ERROR" 'enumvalue :keyword)
-	#.(lispify "LSCONN_ST_CLOSED" 'enumvalue :keyword)
-	#.(lispify "LSCONN_ST_PEER_GOING_AWAY" 'enumvalue :keyword))
+(cl:export '#.(chomp-lsquic "lsquic_engine_count_attq" 'function))
 
-(cffi:defcfun ("lsquic_conn_status" #.(lispify "lsquic_conn_status" 'function)) #.(lispify "LSQUIC_CONN_STATUS" 'enumname)
+(cffi:defcenum #.(chomp-lsquic "LSQUIC_CONN_STATUS" 'enumname)
+	#.(chomp-lsquic "LSCONN_ST_HSK_IN_PROGRESS" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSCONN_ST_CONNECTED" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSCONN_ST_HSK_FAILURE" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSCONN_ST_GOING_AWAY" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSCONN_ST_TIMED_OUT" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSCONN_ST_RESET" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSCONN_ST_USER_ABORTED" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSCONN_ST_ERROR" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSCONN_ST_CLOSED" 'enumvalue :keyword)
+	#.(chomp-lsquic "LSCONN_ST_PEER_GOING_AWAY" 'enumvalue :keyword))
+
+(cl:export '#.(chomp-lsquic "LSQUIC_CONN_STATUS" 'enumname))
+
+(cffi:defcfun ("lsquic_conn_status" #.(chomp-lsquic "lsquic_conn_status" 'function)) #.(chomp-lsquic "LSQUIC_CONN_STATUS" 'enumname)
   (arg0 :pointer)
   (errbuf :string)
   (bufsz :pointer))
 
-(cffi:defcvar ("lsquic_ver2str" #.(lispify "lsquic_ver2str" 'variable))
+(cl:export '#.(chomp-lsquic "lsquic_conn_status" 'function))
+
+(cffi:defcvar ("lsquic_ver2str" #.(chomp-lsquic "lsquic_ver2str" 'variable))
  :pointer)
 
-(cffi:defcenum #.(lispify "lsxpack_flag" 'enumname)
-	(#.(lispify "LSXPACK_HPACK_VAL_MATCHED" 'enumvalue :keyword) #.1)
-	(#.(lispify "LSXPACK_QPACK_IDX" 'enumvalue :keyword) #.2)
-	(#.(lispify "LSXPACK_APP_IDX" 'enumvalue :keyword) #.4)
-	(#.(lispify "LSXPACK_NAME_HASH" 'enumvalue :keyword) #.8)
-	(#.(lispify "LSXPACK_NAMEVAL_HASH" 'enumvalue :keyword) #.16)
-	(#.(lispify "LSXPACK_VAL_MATCHED" 'enumvalue :keyword) #.32)
-	(#.(lispify "LSXPACK_NEVER_INDEX" 'enumvalue :keyword) #.64))
+(cl:export '#.(chomp-lsquic "lsquic_ver2str" 'variable))
 
-(cffi:defcstruct #.(lispify "lsxpack_header" 'classname)
-	(#.(lispify "buf" 'slotname) :string)
-	(#.(lispify "name_hash" 'slotname) :pointer)
-	(#.(lispify "nameval_hash" 'slotname) :pointer)
-	(#.(lispify "name_offset" 'slotname) :pointer)
-	(#.(lispify "name_len" 'slotname) :pointer)
-	(#.(lispify "val_offset" 'slotname) :pointer)
-	(#.(lispify "val_len" 'slotname) :pointer)
-	(#.(lispify "chain_next_idx" 'slotname) :pointer)
-	(#.(lispify "hpack_index" 'slotname) :pointer)
-	(#.(lispify "qpack_index" 'slotname) :pointer)
-	(#.(lispify "app_index" 'slotname) :pointer)
-	(#.(lispify "flags" 'slotname) #.(lispify "lsxpack_flag" 'enumname))
-	(#.(lispify "indexed_type" 'slotname) :pointer)
-	(#.(lispify "dec_overhead" 'slotname) :pointer))
+(cffi:defcenum #.(chomp-lsquic "lsxpack_flag" 'enumname)
+	(#.(chomp-lsquic "LSXPACK_HPACK_VAL_MATCHED" 'enumvalue :keyword) #.1)
+	(#.(chomp-lsquic "LSXPACK_QPACK_IDX" 'enumvalue :keyword) #.2)
+	(#.(chomp-lsquic "LSXPACK_APP_IDX" 'enumvalue :keyword) #.4)
+	(#.(chomp-lsquic "LSXPACK_NAME_HASH" 'enumvalue :keyword) #.8)
+	(#.(chomp-lsquic "LSXPACK_NAMEVAL_HASH" 'enumvalue :keyword) #.16)
+	(#.(chomp-lsquic "LSXPACK_VAL_MATCHED" 'enumvalue :keyword) #.32)
+	(#.(chomp-lsquic "LSXPACK_NEVER_INDEX" 'enumvalue :keyword) #.64))
 
-(cffi:defcfun ("lsxpack_header_set_idx" #.(lispify "lsxpack_header_set_idx" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsxpack_flag" 'enumname))
+
+(cffi:defcstruct #.(chomp-lsquic "lsxpack_header" 'classname)
+	(#.(chomp-lsquic "buf" 'slotname) :string)
+	(#.(chomp-lsquic "name_hash" 'slotname) :pointer)
+	(#.(chomp-lsquic "nameval_hash" 'slotname) :pointer)
+	(#.(chomp-lsquic "name_offset" 'slotname) :pointer)
+	(#.(chomp-lsquic "name_len" 'slotname) :pointer)
+	(#.(chomp-lsquic "val_offset" 'slotname) :pointer)
+	(#.(chomp-lsquic "val_len" 'slotname) :pointer)
+	(#.(chomp-lsquic "chain_next_idx" 'slotname) :pointer)
+	(#.(chomp-lsquic "hpack_index" 'slotname) :pointer)
+	(#.(chomp-lsquic "qpack_index" 'slotname) :pointer)
+	(#.(chomp-lsquic "app_index" 'slotname) :pointer)
+	(#.(chomp-lsquic "flags" 'slotname) #.(chomp-lsquic "lsxpack_flag" 'enumname))
+	(#.(chomp-lsquic "indexed_type" 'slotname) :pointer)
+	(#.(chomp-lsquic "dec_overhead" 'slotname) :pointer))
+
+(cl:export '#.(chomp-lsquic "lsxpack_header" 'classname))
+
+(cl:export '#.(chomp-lsquic "buf" 'slotname))
+
+(cl:export '#.(chomp-lsquic "name_hash" 'slotname))
+
+(cl:export '#.(chomp-lsquic "nameval_hash" 'slotname))
+
+(cl:export '#.(chomp-lsquic "name_offset" 'slotname))
+
+(cl:export '#.(chomp-lsquic "name_len" 'slotname))
+
+(cl:export '#.(chomp-lsquic "val_offset" 'slotname))
+
+(cl:export '#.(chomp-lsquic "val_len" 'slotname))
+
+(cl:export '#.(chomp-lsquic "chain_next_idx" 'slotname))
+
+(cl:export '#.(chomp-lsquic "hpack_index" 'slotname))
+
+(cl:export '#.(chomp-lsquic "qpack_index" 'slotname))
+
+(cl:export '#.(chomp-lsquic "app_index" 'slotname))
+
+(cl:export '#.(chomp-lsquic "flags" 'slotname))
+
+(cl:export '#.(chomp-lsquic "indexed_type" 'slotname))
+
+(cl:export '#.(chomp-lsquic "dec_overhead" 'slotname))
+
+(cffi:defcfun ("lsxpack_header_set_idx" #.(chomp-lsquic "lsxpack_header_set_idx" 'function)) :void
   (hdr :pointer)
   (hpack_idx :int)
   (val :string)
   (val_len :pointer))
 
-(cffi:defcfun ("lsxpack_header_set_qpack_idx" #.(lispify "lsxpack_header_set_qpack_idx" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsxpack_header_set_idx" 'function))
+
+(cffi:defcfun ("lsxpack_header_set_qpack_idx" #.(chomp-lsquic "lsxpack_header_set_qpack_idx" 'function)) :void
   (hdr :pointer)
   (qpack_idx :int)
   (val :string)
   (val_len :pointer))
 
-(cffi:defcfun ("lsxpack_header_set_offset" #.(lispify "lsxpack_header_set_offset" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsxpack_header_set_qpack_idx" 'function))
+
+(cffi:defcfun ("lsxpack_header_set_offset" #.(chomp-lsquic "lsxpack_header_set_offset" 'function)) :void
   (hdr :pointer)
   (buf :string)
   (name_offset :pointer)
   (name_len :pointer)
   (val_len :pointer))
 
-(cffi:defcfun ("lsxpack_header_set_offset2" #.(lispify "lsxpack_header_set_offset2" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsxpack_header_set_offset" 'function))
+
+(cffi:defcfun ("lsxpack_header_set_offset2" #.(chomp-lsquic "lsxpack_header_set_offset2" 'function)) :void
   (hdr :pointer)
   (buf :string)
   (name_offset :pointer)
@@ -656,22 +1288,34 @@
   (val_offset :pointer)
   (val_len :pointer))
 
-(cffi:defcfun ("lsxpack_header_prepare_decode" #.(lispify "lsxpack_header_prepare_decode" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsxpack_header_set_offset2" 'function))
+
+(cffi:defcfun ("lsxpack_header_prepare_decode" #.(chomp-lsquic "lsxpack_header_prepare_decode" 'function)) :void
   (hdr :pointer)
   (out :string)
   (offset :pointer)
   (len :pointer))
 
-(cffi:defcfun ("lsxpack_header_get_name" #.(lispify "lsxpack_header_get_name" 'function)) :string
+(cl:export '#.(chomp-lsquic "lsxpack_header_prepare_decode" 'function))
+
+(cffi:defcfun ("lsxpack_header_get_name" #.(chomp-lsquic "lsxpack_header_get_name" 'function)) :string
   (hdr :pointer))
 
-(cffi:defcfun ("lsxpack_header_get_value" #.(lispify "lsxpack_header_get_value" 'function)) :string
+(cl:export '#.(chomp-lsquic "lsxpack_header_get_name" 'function))
+
+(cffi:defcfun ("lsxpack_header_get_value" #.(chomp-lsquic "lsxpack_header_get_value" 'function)) :string
   (hdr :pointer))
 
-(cffi:defcfun ("lsxpack_header_get_dec_size" #.(lispify "lsxpack_header_get_dec_size" 'function)) :pointer
+(cl:export '#.(chomp-lsquic "lsxpack_header_get_value" 'function))
+
+(cffi:defcfun ("lsxpack_header_get_dec_size" #.(chomp-lsquic "lsxpack_header_get_dec_size" 'function)) :pointer
   (hdr :pointer))
 
-(cffi:defcfun ("lsxpack_header_mark_val_changed" #.(lispify "lsxpack_header_mark_val_changed" 'function)) :void
+(cl:export '#.(chomp-lsquic "lsxpack_header_get_dec_size" 'function))
+
+(cffi:defcfun ("lsxpack_header_mark_val_changed" #.(chomp-lsquic "lsxpack_header_mark_val_changed" 'function)) :void
   (hdr :pointer))
+
+(cl:export '#.(chomp-lsquic "lsxpack_header_mark_val_changed" 'function))
 
 

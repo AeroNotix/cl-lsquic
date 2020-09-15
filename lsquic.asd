@@ -4,17 +4,15 @@
   :licence "WTFPL"
   :serial t
   :description "FFI Bindings to litespeed QUIC"
-  :components ((:file "src/package")
+  :components ((:file "src/lsquic-package")
                (:file "src/ffi")
-               (:file "src/ffi-dns")
-               (:file "src/ffi-udp")
-               (:file "src/tyranny")
                (:file "src/logging")
-               (:file "src/lsquic")
                (:file "src/sockets")
-               (:file "src/http3"))
-  :depends-on (:cffi
-               :bordeaux-threads
-               :static-vectors
+               (:file "src/lsquic"))
+  :depends-on (:bordeaux-threads
+               :cffi
+               :dns
+               :cffi-helpers
+               :split-sequence
                :weird-pointers
-               :usocket))
+               :udp))

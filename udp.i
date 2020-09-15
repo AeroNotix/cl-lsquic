@@ -1,7 +1,9 @@
-%feature("intern_function", "lispify");
-
+%feature("intern_function", "swig-lispify");
+%feature("export");
 %insert("lisphead") %{
-(in-package :lsquic)
+    (defpackage :udp
+     (:use :cl :cffi))
+(in-package :udp)
 %}
 
 %include "udp.h"

@@ -1,17 +1,17 @@
-(in-package :lsquic)
+(in-package :http3)
 
 
-(defclass http3-header ()
+(defclass header ()
   ((name :initarg :name :accessor name)
    (value :initarg :value :accessor value)))
 
-(defclass http3-request ()
+(defclass request ()
   ((path :initarg :path :accessor path)
    (headers :initarg :headers :accessor headers)
    (body :initarg :body :accessor body)
    (verb :initarg :verb :accessor verb)))
 
-(defmethod lsxpack-headers ((request http3-request))
+(defmethod lsxpack-headers ((request request))
   (let* ((header-count (length (headers request)))
          (lsxpack-header (safe-foreign-alloc '(:struct lsxpack-header) :count header-count))
          (lsquic-headers (with-initialize-foreign-struct lsquic-http-headers

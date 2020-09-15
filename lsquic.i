@@ -1,5 +1,5 @@
-%feature("intern_function", "lispify");
-
+%feature("intern_function", "chomp-lsquic");
+%feature("export");
 %typemap(cin) int* "(:pointer :int)";
 
 %insert("lisphead") %{

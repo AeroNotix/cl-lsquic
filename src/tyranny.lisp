@@ -1,4 +1,13 @@
-(in-package :lsquic)
+(defpackage :cffi-helpers
+  (:use :cl)
+  (:export
+   #:make-pointer-to
+   #:with-pointer-to
+   #:with-pointer-to-int
+   #:safe-foreign-alloc
+   #:with-initialize-foreign-struct))
+
+(in-package :cffi-helpers)
 
 (defun make-pointer-to (type val)
   (cffi:foreign-alloc type :initial-element val))
@@ -23,7 +32,7 @@
      ,@body))
 
 (defun safe-foreign-alloc (type &key (count 1))
-  (static-vectors:fill-foreign-memory (foreign-alloc type :count count) (foreign-type-size type) 0))
+  (static-vectors:fill-foreign-memory (cffi:foreign-alloc type :count count) (cffi:foreign-type-size type) 0))
 
 (defmacro with-initialize-foreign-struct (type &body body)
   (let ((struct-field-names (foreign-slot-names `(:struct ,type))))

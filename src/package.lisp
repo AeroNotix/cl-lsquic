@@ -1,9 +1,11 @@
-(defpackage :lsquic
-  (:use :cl :cffi)
+(defpackage :http3
+  (:use :cl :cffi :cffi-helpers)
   (:export
-   #:lispify))
+   #:client
+   #:quic-connect
+   #:packets-in))
 
-(in-package :lsquic)
+(in-package :http3)
 
 (cffi:define-foreign-library lsquic
   (:unix (:or "lsquic/src/liblsquic/liblsquic.so")))
@@ -13,15 +15,6 @@
 
 (cffi:define-foreign-library udp
   (:unix (:or "c-src/libudp.so")))
-
-(defun lispify (name flag &optional (package *package*))
-  "Borrowed from: https://github.com/mtstickney/cl-libqmlbind/blob/24df1d4248c8962eaadb9dc180e25afa14c7492d/cl-libqmlbind.lisp"
-  (intern (string-upcase (map 'string (lambda (c)
-                                        (case c
-                                          (#\_ #\-)
-                                          (t c)))
-                              name))
-          package))
 
 (cffi:use-foreign-library lsquic)
 (cffi:use-foreign-library dns)
