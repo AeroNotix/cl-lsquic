@@ -26,10 +26,12 @@
   (force-output))
 
 (defcallback cb-on-new-stream :pointer ((stream-if-ctx :pointer) (lsquic-stream :pointer))
-  (format t "cb-on-new-stream~%")
+  (format t "cb-on-new-stream ~A / ~A~%" stream-if-ctx lsquic-stream)
   (force-output)
+
   (let ((stream-ctx (conn-get-ctx (stream-conn lsquic-stream))))
-    (when (not (eq (stream-is-pushed lsquic-stream) 0))
+    (format t "Is stream pushed: ~D~%" (stream-is-pushed lsquic-stream))
+    (when (eq (stream-is-pushed lsquic-stream) 0)
       (stream-wantwrite lsquic-stream 1)
       (weird-pointers:save (pop-stream-ctx (weird-pointers:restore stream-ctx))))))
 
@@ -40,8 +42,9 @@
 (defcallback cb-on-write :void ((lsquic-stream :pointer) (lsquic-stream-ctx :pointer))
   (format t "cb-on-write~%")
   (force-output)
-  (let ((ctx (weird-pointers:restore lsquic-stream-ctx)))
-    (on-write ctx)))
+  (let* ((pipe (weird-pointers:restore lsquic-stream-ctx))
+         (headers (lsxpack-headers (request pipe))))
+    (format t "~D~%" (stream-send-headers lsquic-stream headers 0))))
 
 (defcallback cb-on-close :void ((lsquic-stream :pointer) (lsquic-stream-ctx :pointer))
   (format t "cb-on-close~%") (force-output))
