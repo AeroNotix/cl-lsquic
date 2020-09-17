@@ -25,23 +25,6 @@
         (foreign-enum-value 'version key)
         (error 'invalid-quic-version :requested str :available version-map))))
 
-(defclass pipe ()
-  ((input :accessor input)
-   (output :accessor output)
-   (ctx :initarg :ctx :accessor ctx)))
-
-(defmethod initialize-instance :after ((pipe pipe) &key)
-  (multiple-value-bind (i o) (sb-posix:pipe)
-    (setf (input pipe) i)
-    (setf (output pipe) o)))
-
-(defmethod close-pipe ((pipe pipe))
-  (sb-posix:close (input pipe))
-  (sb-posix:close (output pipe)))
-
-(defcallback write-pipe :void ((ctx :pointer) (buf :pointer) (len :int) (fin :int))
-  (sb-posix:write (output (weird-pointers:restore ctx)) buf len))
-
 (defclass client (socket)
   (;; This lock protects the request-queue
    (rq-lock         :initform (bt:make-lock) :accessor rq-lock)
@@ -168,13 +151,13 @@
   (bt:with-lock-held ((rq-lock client))
     (pop (request-queue client))))
 
-(defmethod new-stream ((client client) ctx)
-  (let ((pipe (make-instance 'pipe :ctx ctx)))
+(defmethod new-stream ((client client) request)
+  (let ((pipe (make-instance 'pipe :request request)))
     (push-stream-ctx client pipe)
     (conn-make-stream (quic-conn client))
     pipe))
 
 (defmethod send-request ((client client) request)
   (let ((pipe (new-stream client request)))
-     pipe))
+    pipe))
 
