@@ -9,6 +9,8 @@
                (:file "logging")
                (:file "sockets")
                (:file "lsquic")
+               (:file "request")
+               (:file "io")
                (:file "client"))
   :depends-on (:bordeaux-threads
                :cffi

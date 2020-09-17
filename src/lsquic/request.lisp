@@ -6,12 +6,33 @@
    (value :initarg :value :accessor value)))
 
 (defmethod make-lsxpack-header ((header header))
-  (with-initialize-foreign-struct lsquic::lsxpack-header
-    (setf lsquic:buf (foreign-string-alloc (format nil "~A~A" (name header) (value header))))
-    (setf lsquic:name-len (length (name header)))
-    (setf lsquic:name-offset 0)
-    (setf lsquic:val-len (length (value header)))
-    (setf lsquic:val-offset (length (name header)))))
+  (format t "name len ~D value len ~D~%" (length (name header)) (length (value header)))
+  (let ((lheader (with-initialize-foreign-struct lsquic:lsxpack-header
+                   (setf lsquic:buf (foreign-string-alloc (format nil "~A~A" (name header) (value header)) :null-terminated-p nil))
+                   (setf lsquic:name-len (length (name header)))
+                   (setf lsquic:name-offset 0)
+                   (setf lsquic:val-len (length (value header)))
+                   (setf lsquic:val-offset (length (name header)))
+                   )))
+
+    (with-foreign-slots ((name-len name-offset val-len val-offset) lheader (:struct lsquic:lsxpack-header))
+        (format t "name len ~D name offset ~D value len ~D value offset ~D~%" name-len name-offset val-len val-offset))
+
+    ;; (let ((buf (foreign-string-alloc (format nil "~A~A" (name header) (value header)))))
+
+    ;;   (lsxpack-header-set-offset2
+    ;;    lheader
+    ;;    buf
+    ;;    0
+    ;;    (length (name header))
+    ;;    (length (name header))
+    ;;    (length (value header))))
+
+    ;; (with-foreign-slots ((name-len name-offset val-len val-offset) lheader (:struct lsquic:lsxpack-header))
+    ;;   (format t "name len ~D name offset ~D value len ~D value offset ~D~%" name-len name-offset val-len val-offset))
+    (format t "~A~%" (lsxpack-header-get-name lheader))
+    (format t "~A~%" (lsxpack-header-get-value lheader))
+    lheader))
 
 (defclass request ()
   ((path :initarg :path :accessor path)
