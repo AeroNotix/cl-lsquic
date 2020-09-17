@@ -35,7 +35,9 @@
   (static-vectors:fill-foreign-memory (cffi:foreign-alloc type :count count) (cffi:foreign-type-size type) 0))
 
 (defmacro with-initialize-foreign-struct (type &body body)
-  (let ((struct-field-names (foreign-slot-names `(:struct ,type))))
-  `(let ((s (safe-foreign-alloc '(:struct ,type))))
-     (with-foreign-slots (,struct-field-names s  '(:struct ,type))
-       ,@body))))
+  (let* ((struct-field-names (cffi:foreign-slot-names (list :struct type)))
+         (struct-sym (gensym)))
+    `(let ((,struct-sym (safe-foreign-alloc (list :struct ',type))))
+       (cffi:with-foreign-slots (,struct-field-names ,struct-sym (:struct ,type))
+         (progn ,@body)
+         ,struct-sym))))
