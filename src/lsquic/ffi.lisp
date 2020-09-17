@@ -33,7 +33,7 @@
                       ((cl:lower-case-p c)
                        (helper (cl:cdr lst) 'lower (cl:cons (cl:char-upcase c) rest)))
                       ((cl:digit-char-p c)
-                       (helper (cl:cdr lst) 'digit 
+                       (helper (cl:cdr lst) 'digit
                                (cl:case last
                                  ((upper lower) (cl:list* c #\- rest))
                                  (cl:t (cl:cons c rest)))))
@@ -1213,10 +1213,10 @@
 	(#.(chomp-lsquic "buf" 'slotname) :string)
 	(#.(chomp-lsquic "name_hash" 'slotname) :pointer)
 	(#.(chomp-lsquic "nameval_hash" 'slotname) :pointer)
-	(#.(chomp-lsquic "name_offset" 'slotname) :pointer)
-	(#.(chomp-lsquic "name_len" 'slotname) :pointer)
-	(#.(chomp-lsquic "val_offset" 'slotname) :pointer)
-	(#.(chomp-lsquic "val_len" 'slotname) :pointer)
+	(#.(chomp-lsquic "name_offset" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "name_len" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "val_offset" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "val_len" 'slotname) :unsigned-int)
 	(#.(chomp-lsquic "chain_next_idx" 'slotname) :pointer)
 	(#.(chomp-lsquic "hpack_index" 'slotname) :pointer)
 	(#.(chomp-lsquic "qpack_index" 'slotname) :pointer)
