@@ -13,3 +13,14 @@
                :static-vectors
                :weird-pointers
                :usocket))
+
+(defsystem :http3/test
+  :version "0.0.1"
+  :description "HTTP3 Client tests"
+  :licence "WTFPL"
+  :components ((:module "test"
+                :components
+                ((:file "tests"))))
+  :depends-on (:http3 :fiveam)
+  :perform (test-op :after (o s)
+                    (fiveam:run! :http3)))

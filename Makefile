@@ -1,4 +1,6 @@
 BORINGSSL_COMMIT=251b5169fd44345f455438312ec4e18ae07fd58c
+LISP ?= sbcl
+sbcl_TEST_OPTS=--noinform --disable-debugger --quit --load ./run-tests.lisp
 
 .PHONY: lsquic build test
 
@@ -25,3 +27,6 @@ src/ffi-dns.lisp: dns.i Makefile c-src/libdns.so
 
 src/ffi-udp.lisp: udp.i Makefile c-src/libudp.so
 	swig -cffi -module ffi -outdir src/udp -I./c-src udp.i
+
+test:
+	@$(LISP) $($(LISP)_TEST_OPTS)

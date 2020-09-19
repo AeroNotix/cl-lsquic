@@ -3,6 +3,10 @@
   (:export
    #:engine
 
+   #:request
+   #:header
+   #:lsxpack-headers
+
    #:set-context
    #:process-conns
    #:packets-in

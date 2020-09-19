@@ -6,11 +6,11 @@
    (value :initarg :value :accessor value)))
 
 (defclass request ()
-  ((path :initarg :path :accessor path)
-   (scheme :initarg :scheme :accessor scheme)
-   (headers :initarg :headers :accessor headers)
+  ((path :initarg :path :initform "/" :accessor path)
+   (scheme :initarg :scheme :initform "https" :accessor scheme)
+   (headers :initarg :headers :initform nil :accessor headers)
    (authority :initarg :authority :accessor authority)
-   (verb :initarg :verb :accessor verb)
+   (verb :initarg :verb :initform "GET" :accessor verb)
    (body :initarg :body :accessor body)))
 
 (defmethod make-lsxpack-header ((header header))

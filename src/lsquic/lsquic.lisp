@@ -68,7 +68,7 @@
                  (let ((client (weird-pointers:restore peer-ctx)))
                    (let ((count (udp:send-packets-out dest-sa iov iovlen (sb-bsd-sockets:socket-file-descriptor (socket (socket client))))))
                      (when (< count 0)
-                       (error)))
+                       (error "short write")))
                    (incf n)
                    (cffi:incf-pointer specs)))))
     (if (> n 0)

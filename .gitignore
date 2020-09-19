@@ -1,3 +1,4 @@
 c-src/*.o
 c-src/*.so
 /main
+/coverage/
