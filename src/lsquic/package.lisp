@@ -37,3 +37,10 @@
                      (subseq name (length s))
                      name)))
            prefixes-to-remove))) flag package))))
+
+(cffi:define-foreign-library lsquic
+    (:unix (:or "lsquic/src/liblsquic/liblsquic.so")))
+(cffi:use-foreign-library lsquic)
+
+(dns:initialize-library)
+(udp:initialize-library)

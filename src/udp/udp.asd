@@ -4,5 +4,6 @@
   :licence "WTFPL"
   :serial t
   :description "Helpful UDP functions where Lisp doesn't efficiently do the right things"
-  :components ((:file "ffi"))
+  :components ((:file "package")
+               (:file "ffi"))
   :depends-on (:cffi))
