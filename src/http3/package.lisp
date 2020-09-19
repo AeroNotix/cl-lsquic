@@ -2,7 +2,7 @@
   (:use :cl :cffi :cffi-helpers)
   (:export
    #:client
-   #:quic-connect
+   #:connect
    #:packets-in))
 
 (in-package :http3)
