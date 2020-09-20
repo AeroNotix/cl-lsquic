@@ -29,8 +29,8 @@
   (;; This lock protects the request-queue
    (rq-lock         :initform (bt:make-lock) :accessor rq-lock)
    (request-queue   :initform '() :accessor request-queue)
-   (host            :initarg :host :initform (error "You must supply a host to connect to"))
-   (port            :initarg :port :initform 443)
+   (host            :initarg :host :initform (error "You must supply a host to connect to") :accessor host)
+   (port            :initarg :port :initform 443 :accessor port)
    (engine-version  :initarg :quic-version :initform (error "You must supply a QUIC protocol version string")
                     :accessor engine-version)
    (engine-settings :initform (cffi-helpers:safe-foreign-alloc '(:struct engine-settings))
@@ -58,22 +58,22 @@
     ;; TODO: write a with-foreign-alloc macro, if can't borrow one
     ;; from somewhere, instead of this foreign-alloc that we don't
     ;; free.
-    (let ((errbuf (foreign-alloc :char :count 256)))
+    (let* ((bufsize 256)
+           (errbuf (foreign-alloc :char :count bufsize)))
       (with-foreign-slots ((es-versions es-ql-bits) engine-settings (:struct engine-settings))
-        (cffi-helpers:with-pointer-to-int (bufsize 256)
-          (setf es-ql-bits 0)
-          (setf es-versions (logior es-versions (ash 1 (str->quic-version engine-version))))
-          (when (not (eq 0 (engine-check-settings engine-settings lseng-http errbuf bufsize)))
-            (error 'invalid-settings))
-          (logger-initialize log-level)
-          (with-foreign-slots ((ea-settings
-                                ea-packets-out
-                                ea-packets-out-ctx
-                                ea-stream-if
-                                ea-stream-if-ctx) engine-api (:struct engine-api))
-            (setf ea-settings engine-settings)
-            (setf ea-stream-if client-callbacks)
-            (setf ea-packets-out (callback cb-packets-out))))))))
+        (setf es-ql-bits 0)
+        (setf es-versions (logior es-versions (ash 1 (str->quic-version engine-version))))
+        (when (not (eq 0 (engine-check-settings engine-settings lseng-http errbuf bufsize)))
+          (error 'invalid-settings))
+        (logger-initialize log-level)
+        (with-foreign-slots ((ea-settings
+                              ea-packets-out
+                              ea-packets-out-ctx
+                              ea-stream-if
+                              ea-stream-if-ctx) engine-api (:struct engine-api))
+          (setf ea-settings engine-settings)
+          (setf ea-stream-if client-callbacks)
+          (setf ea-packets-out (callback cb-packets-out)))))))
 
 (defmethod set-context ((client client))
   (format t "~A~%" client)
@@ -89,25 +89,24 @@
 
 (defmethod quic-connect ((client client))
   (with-slots (host port engine socket engine-version quic-conn peer-ctx conn-ctx) client
-    (with-pointer-to-int (zero 0)
-      (let* ((version (str->quic-version engine-version))
-             (udp-socket (create-udp-socket host :port port)))
-        (setf socket udp-socket)
-        (let ((conn (engine-connect
-                     engine
-                     version
-                     (local-sockaddr udp-socket)
-                     (peer-sockaddr udp-socket)
-                     peer-ctx
-                     conn-ctx
-                     host
-                     0
-                     (cffi:null-pointer)
-                     zero
-                     (cffi:null-pointer)
-                     zero)))
+    (let* ((version (str->quic-version engine-version))
+           (udp-socket (create-udp-socket host :port port)))
+      (setf socket udp-socket)
+      (let ((conn (engine-connect
+                   engine
+                   version
+                   (local-sockaddr udp-socket)
+                   (peer-sockaddr udp-socket)
+                   peer-ctx
+                   conn-ctx
+                   host
+                   0
+                   (cffi:null-pointer)
+                   0
+                   (cffi:null-pointer)
+                   0)))
           (check-null-p conn)
-          (setf quic-conn conn)))))
+          (setf quic-conn conn))))
   (sb-ext:schedule-timer
    (sb-ext:make-timer (lambda () (process-conns client)) :thread t)
    0.1)
