@@ -59,7 +59,7 @@
 (cffi:defcfun ("send_packets_out" #.(swig-lispify "send_packets_out" 'function)) :int
   (dest_sa :pointer)
   (iov :pointer)
-  (iovilen :pointer)
+  (iovilen :unsigned-int)
   (fd :int))
 
 (cl:export '#.(swig-lispify "send_packets_out" 'function))

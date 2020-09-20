@@ -566,13 +566,13 @@
   (settings :pointer)
   (lsquic_engine_flags :unsigned-int)
   (err_buf :string)
-  (err_buf_sz :pointer))
+  (err_buf_sz :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsquic_engine_check_settings" 'function))
 
 (cffi:defcstruct #.(chomp-lsquic "lsquic_out_spec" 'classname)
 	(#.(chomp-lsquic "iov" 'slotname) :pointer)
-	(#.(chomp-lsquic "iovlen" 'slotname) :pointer)
+	(#.(chomp-lsquic "iovlen" 'slotname) :unsigned-int)
 	(#.(chomp-lsquic "local_sa" 'slotname) :pointer)
 	(#.(chomp-lsquic "dest_sa" 'slotname) :pointer)
 	(#.(chomp-lsquic "peer_ctx" 'slotname) :pointer)
@@ -746,16 +746,16 @@
   (hostname :string)
   (base_plpmtu :unsigned-short)
   (sess_resume :pointer)
-  (sess_resume_len :pointer)
+  (sess_resume_len :unsigned-int)
   (token :pointer)
-  (token_sz :pointer))
+  (token_sz :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsquic_engine_connect" 'function))
 
 (cffi:defcfun ("lsquic_engine_packet_in" #.(chomp-lsquic "lsquic_engine_packet_in" 'function)) :int
   (arg0 :pointer)
   (packet_in_data :pointer)
-  (packet_in_size :pointer)
+  (packet_in_size :unsigned-int)
   (sa_local :pointer)
   (sa_peer :pointer)
   (peer_ctx :pointer)
@@ -823,7 +823,7 @@
 (cffi:defcfun ("lsquic_stream_read" #.(chomp-lsquic "lsquic_stream_read" 'function)) :pointer
   (s :pointer)
   (buf :pointer)
-  (len :pointer))
+  (len :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsquic_stream_read" 'function))
 
@@ -850,7 +850,7 @@
 (cffi:defcfun ("lsquic_stream_write" #.(chomp-lsquic "lsquic_stream_write" 'function)) :pointer
   (s :pointer)
   (buf :pointer)
-  (len :pointer))
+  (len :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsquic_stream_write" 'function))
 
@@ -1099,13 +1099,13 @@
 
 (cffi:defcfun ("lsquic_str2ver" #.(chomp-lsquic "lsquic_str2ver" 'function)) #.(chomp-lsquic "lsquic_version" 'enumname)
   (str :string)
-  (len :pointer))
+  (len :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsquic_str2ver" 'function))
 
 (cffi:defcfun ("lsquic_alpn2ver" #.(chomp-lsquic "lsquic_alpn2ver" 'function)) #.(chomp-lsquic "lsquic_version" 'enumname)
   (alpn :string)
-  (len :pointer))
+  (len :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsquic_alpn2ver" 'function))
 
@@ -1149,13 +1149,13 @@
 (cffi:defcfun ("lsquic_is_valid_hs_packet" #.(chomp-lsquic "lsquic_is_valid_hs_packet" 'function)) :int
   (arg0 :pointer)
   (arg1 :pointer)
-  (arg2 :pointer))
+  (arg2 :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsquic_is_valid_hs_packet" 'function))
 
 (cffi:defcfun ("lsquic_cid_from_packet" #.(chomp-lsquic "lsquic_cid_from_packet" 'function)) :int
   (arg0 :pointer)
-  (bufsz :pointer)
+  (bufsz :unsigned-int)
   (cid :pointer))
 
 (cl:export '#.(chomp-lsquic "lsquic_cid_from_packet" 'function))
@@ -1189,7 +1189,7 @@
 (cffi:defcfun ("lsquic_conn_status" #.(chomp-lsquic "lsquic_conn_status" 'function)) #.(chomp-lsquic "LSQUIC_CONN_STATUS" 'enumname)
   (arg0 :pointer)
   (errbuf :string)
-  (bufsz :pointer))
+  (bufsz :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsquic_conn_status" 'function))
 
@@ -1259,7 +1259,7 @@
   (hdr :pointer)
   (hpack_idx :int)
   (val :string)
-  (val_len :pointer))
+  (val_len :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsxpack_header_set_idx" 'function))
 
@@ -1267,34 +1267,34 @@
   (hdr :pointer)
   (qpack_idx :int)
   (val :string)
-  (val_len :pointer))
+  (val_len :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsxpack_header_set_qpack_idx" 'function))
 
 (cffi:defcfun ("lsxpack_header_set_offset" #.(chomp-lsquic "lsxpack_header_set_offset" 'function)) :void
   (hdr :pointer)
   (buf :string)
-  (name_offset :pointer)
-  (name_len :pointer)
-  (val_len :pointer))
+  (name_offset :unsigned-int)
+  (name_len :unsigned-int)
+  (val_len :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsxpack_header_set_offset" 'function))
 
 (cffi:defcfun ("lsxpack_header_set_offset2" #.(chomp-lsquic "lsxpack_header_set_offset2" 'function)) :void
   (hdr :pointer)
   (buf :string)
-  (name_offset :pointer)
-  (name_len :pointer)
-  (val_offset :pointer)
-  (val_len :pointer))
+  (name_offset :unsigned-int)
+  (name_len :unsigned-int)
+  (val_offset :unsigned-int)
+  (val_len :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsxpack_header_set_offset2" 'function))
 
 (cffi:defcfun ("lsxpack_header_prepare_decode" #.(chomp-lsquic "lsxpack_header_prepare_decode" 'function)) :void
   (hdr :pointer)
   (out :string)
-  (offset :pointer)
-  (len :pointer))
+  (offset :unsigned-int)
+  (len :unsigned-int))
 
 (cl:export '#.(chomp-lsquic "lsxpack_header_prepare_decode" 'function))
 
