@@ -6,14 +6,8 @@
    #:request
    #:header
    #:lsxpack-headers
-
-   #:set-context
-   #:process-conns
-   #:packets-in
-   #:new-engine
-   #:quic-connect
-   #:client
-   #:logger-initialize))
+   #:connect
+   #:client))
 
 (in-package :lsquic)
 

@@ -133,6 +133,13 @@
            (sb-ext:make-timer (lambda () (process-conns client)) :thread t)
            (/ (mem-aref diff :int) 1000000)))))))
 
+(defmethod connect ((client client))
+  (set-context client)
+  (new-engine client)
+  (quic-connect client)
+  (process-conns client)
+  (packets-in client))
+
 (defmethod packets-in ((client client))
   (bt:with-lock-held ((lock client))
     (with-slots (socket engine peer-ctx) client
@@ -156,8 +163,3 @@
     (push-stream-ctx client pipe)
     (conn-make-stream (quic-conn client))
     pipe))
-
-(defmethod send-request ((client client) request)
-  (let ((pipe (new-stream client request)))
-    pipe))
-
