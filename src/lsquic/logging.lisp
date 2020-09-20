@@ -17,5 +17,5 @@
       (set-log-level ll))
     (logger-init
      (new-logger)
-     (weird-pointers:save :nil)
+     (cffi:null-pointer)
      (foreign-enum-value 'logger-timestamp-style :LLTS-HHMMSSUS))))
