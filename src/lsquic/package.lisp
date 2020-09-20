@@ -3,6 +3,10 @@
   (:export
    #:engine
 
+   #:host
+   #:port
+
+   #:new-stream
    #:request
    #:header
    #:lsxpack-headers
