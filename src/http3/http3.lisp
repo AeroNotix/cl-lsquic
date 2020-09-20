@@ -23,11 +23,11 @@
 (defmethod connect (client)
   (lsquic:connect client))
 
-(defmethod make-request (client &keys host port headers path body verb)
-  (let* ((request (make-instance lsquic:request
+(defmethod make-request (client &key headers path body verb)
+  (let* ((request (make-instance 'lsquic:request
                                  :path path
                                  :headers headers
-                                 :authority host
+                                 :authority (lsquic:host client)
                                  :verb verb
                                  :body body))
          (pipe (lsquic:new-stream client request)))
@@ -36,16 +36,20 @@
 (defmacro request-no-body (verb)
   (let* ((sym-name (symbol-name verb))
          (method-name (intern (format nil "MAKE-~A-REQUEST" sym-name))))
-    `(defmethod ,method-name (client &keys host port headers path)
-       (make-request
-        client :host host :port port :headers header :body nil :verb ,verb))))
+    `(progn
+       (defmethod ,method-name (client &key headers path)
+         (make-request
+          client :path path :headers headers :body nil :verb ,sym-name))
+       (export (quote ,method-name)))))
 
 (defmacro request-with-body (verb)
   (let* ((sym-name (symbol-name verb))
          (method-name (intern (format nil "MAKE-~A-REQUEST" sym-name))))
-    `(defmethod ,method-name (client &keys host port headers path body)
-       (make-request
-        client :host host :port port :headers header :body body :verb ,verb))))
+    `(progn
+       (defmethod ,method-name (client &keys headers path body)
+         (make-request
+          client :path path :headers headers :body body :verb ,sym-name))
+       (export (quote ,method-name)))))
 
 (request-no-body get)
 (request-no-body head)
