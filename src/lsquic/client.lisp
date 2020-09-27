@@ -140,6 +140,7 @@
   (packets-in client))
 
 (defmethod packets-in ((client client))
+  ;; TODO: Switch to libev
   (bt:with-lock-held ((lock client))
     (with-slots (socket engine peer-ctx) client
       (let ((read (udp:recv-packets-in engine (local-sockaddr socket) (sb-bsd-sockets:socket-file-descriptor (socket socket)) peer-ctx)))
@@ -147,7 +148,7 @@
           (lsquic:engine-process-conns engine)
           (sb-ext:schedule-timer
            (sb-ext:make-timer (lambda () (packets-in client)) :thread t)
-           0.3))))))
+           0.1))))))
 
 (defmethod push-stream-ctx ((client client) ctx)
   (bt:with-lock-held ((rq-lock client))
