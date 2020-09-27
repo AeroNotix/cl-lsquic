@@ -33,7 +33,7 @@
                       ((cl:lower-case-p c)
                        (helper (cl:cdr lst) 'lower (cl:cons (cl:char-upcase c) rest)))
                       ((cl:digit-char-p c)
-                       (helper (cl:cdr lst) 'digit
+                       (helper (cl:cdr lst) 'digit 
                                (cl:case last
                                  ((upper lower) (cl:list* c #\- rest))
                                  (cl:t (cl:cons c rest)))))
@@ -92,7 +92,7 @@
 
 (cl:export '#.(chomp-lsquic "LSQUIC_MINOR_VERSION" 'constant))
 
-(cl:defconstant #.(chomp-lsquic "LSQUIC_PATCH_VERSION" 'constant) 8)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_PATCH_VERSION" 'constant) 10)
 
 (cl:export '#.(chomp-lsquic "LSQUIC_PATCH_VERSION" 'constant))
 
@@ -860,6 +860,14 @@
   (count :int))
 
 (cl:export '#.(chomp-lsquic "lsquic_stream_writev" 'function))
+
+(cffi:defcfun ("lsquic_stream_pwritev" #.(chomp-lsquic "lsquic_stream_pwritev" 'function)) :pointer
+  (s :pointer)
+  (preadv :pointer)
+  (user_data :pointer)
+  (n_to_write :unsigned-int))
+
+(cl:export '#.(chomp-lsquic "lsquic_stream_pwritev" 'function))
 
 (cffi:defcstruct #.(chomp-lsquic "lsquic_reader" 'classname)
 	(#.(chomp-lsquic "lsqr_read" 'slotname) :pointer)
