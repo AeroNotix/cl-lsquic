@@ -834,7 +834,7 @@
 
 (cl:export '#.(chomp-lsquic "lsquic_stream_readv" 'function))
 
-(cffi:defcfun ("lsquic_stream_readf" #.(chomp-lsquic "lsquic_stream_readf" 'function)) :pointer
+(cffi:defcfun ("lsquic_stream_readf" #.(chomp-lsquic "lsquic_stream_readf" 'function)) :int
   (s :pointer)
   (readf :pointer)
   (ctx :pointer))
