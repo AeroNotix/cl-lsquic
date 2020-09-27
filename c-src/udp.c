@@ -76,7 +76,6 @@ recv_packets_in(struct lsquic_engine *engine, struct sockaddr *local_sas, int fd
     };
     nread = recvmsg(fd, &msg, 0);
     if (-1 == nread) {
-        printf("Nread was -1: %d\n", errno);
         if (!(EAGAIN == errno || EWOULDBLOCK == errno))
             perror("recvmsg");
         // return 0 so the Lisp code can think this was successful and
