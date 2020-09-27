@@ -14,7 +14,8 @@
    (body :initarg :body :accessor body)))
 
 (defun make-lsxpack-header (el header)
-  (with-foreign-slots ((buf name-len name-offset val-len val-offset) el (:struct lsxpack-header))
+  (with-foreign-slots ((buf flags name-len name-offset val-len val-offset) el (:struct lsxpack-header))
+    (setf flags 0)
     (setf buf (foreign-string-alloc (format nil "~A~A" (name header) (value header))))
     (setf name-len (length (name header)))
     (setf name-offset 0)
@@ -22,14 +23,17 @@
     (setf val-offset (length (name header)))))
 
 (defmethod required-headers ((request request))
-  (list
-   (make-instance 'header :name ":method" :value (verb request))
-   (make-instance 'header :name ":scheme" :value (scheme request))
-   (make-instance 'header :name ":path" :value (path request))
-   (make-instance 'header :name ":authority" :value (authority request))))
+  (let ((hdrs (list
+               (make-instance 'header :name ":method" :value (verb request))
+               (make-instance 'header :name ":scheme" :value (scheme request))
+               (make-instance 'header :name ":path" :value (path request))
+               (make-instance 'header :name ":authority" :value (authority request)))))
+    (if (body request)
+        hdrs
+        (append hdrs (list (make-instance 'header :name "connection" :value "close"))))))
 
 (defmethod lsxpack-headers ((request request))
-  (let* ((all-headers (nconc (required-headers request) (headers request)))
+  (let* ((all-headers (append (required-headers request) (headers request)))
          (count-hdrs (length all-headers))
          (pheaders (cffi:foreign-alloc '(:struct lsxpack-header) :count count-hdrs))
          (http-headers (cffi:foreign-alloc '(:struct http-headers))))
@@ -41,5 +45,4 @@
     (with-foreign-slots ((count headers) http-headers (:struct http-headers))
       (setf count count-hdrs)
       (setf headers pheaders))
-
     http-headers))

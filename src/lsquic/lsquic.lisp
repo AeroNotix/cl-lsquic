@@ -28,9 +28,9 @@
       (weird-pointers:save (pop-stream-ctx (weird-pointers:restore stream-ctx))))))
 
 (defcallback stream-readf :unsigned-int ((stream-ctx :pointer) (buf :pointer) (buf-len :unsigned-int) (fin :int))
-  (format t "in stream-readf: ~A" (cffi:foreign-string-to-lisp buf))
+  (format t "in stream-readf: ~A~%" (cffi:foreign-string-to-lisp buf))
   (force-output)
-  -1)
+  buf-len)
 
 (defcallback cb-on-read :void ((stream :pointer) (stream-ctx :pointer))
   (let ((ctx (weird-pointers:restore stream-ctx))
@@ -39,16 +39,19 @@
       (stream-close stream))
     (when (eq bytes-read 0)
       (stream-shutdown stream 0)
-      (stream-wantread stream 0))))
+      (stream-wantread stream 0))
+    bytes-read))
 
 (defparameter send-headers nil)
 
 (defcallback cb-on-write :void ((stream :pointer) (stream-ctx :pointer))
   (let* ((ctx (weird-pointers:restore stream-ctx))
          (packed-headers (lsxpack-headers (request ctx)))
-         (eos (if (body (request ctx)) 0 1)))
+         (eos 0))
     (unless send-headers
       (stream-send-headers stream packed-headers eos)
+      (stream-shutdown stream 1)
+      (stream-wantread stream 1)
       (setf send-headers t))))
 
 (defcallback cb-on-close :void ((stream :pointer) (stream-ctx :pointer)))
@@ -61,8 +64,6 @@
 
 (defcallback cb-packets-out :int ((packets-out-ctx :pointer) (specs :pointer) (count :int))
   (declare (ignore packets-out-ctx))
-  (format t "cb-packets-out~%")
-  (force-output)
   (let ((n 0))
     (loop while (< n count)
           do
