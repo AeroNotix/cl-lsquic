@@ -6,6 +6,7 @@
   :description "FFI Bindings to litespeed QUIC"
   :components ((:file "package")
                (:file "ffi")
+               (:file "ffi-helpers")
                (:file "logging")
                (:file "sockets")
                (:file "lsquic")

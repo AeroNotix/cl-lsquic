@@ -6,6 +6,7 @@
    #:host
    #:port
 
+   #:wait-for-response
    #:new-stream
    #:request
    #:header
@@ -43,6 +44,9 @@
 (cffi:define-foreign-library lsquic
     (:unix (:or "lsquic/src/liblsquic/liblsquic.so")))
 (cffi:use-foreign-library lsquic)
+(cffi:define-foreign-library lsquic-helpers
+    (:unix (:or "c-src/liblsquic-helpers.so")))
+(cffi:use-foreign-library lsquic-helpers)
 
 (dns:initialize-library)
 (udp:initialize-library)

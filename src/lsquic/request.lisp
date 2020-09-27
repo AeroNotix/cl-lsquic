@@ -13,15 +13,13 @@
    (verb :initarg :verb :initform "GET" :accessor verb)
    (body :initarg :body :accessor body)))
 
-(defmethod make-lsxpack-header ((header header))
-  (with-initialize-foreign-struct lsquic:lsxpack-header
-    (setf lsquic:buf
-          (foreign-string-alloc
-           (format nil "~A~A" (name header) (value header))))
-    (setf lsquic:name-len (length (name header)))
-    (setf lsquic:name-offset 0)
-    (setf lsquic:val-len (length (value header)))
-    (setf lsquic:val-offset (length (name header)))))
+(defun make-lsxpack-header (header)
+  (with-initialize-foreign-struct lsxpack-header
+    (setf buf (foreign-string-alloc (format nil "~A~A" (name header) (value header))))
+    (setf name-len (length (name header)))
+    (setf name-offset 0)
+    (setf val-len (length (value header)))
+    (setf val-offset (length (name header)))))
 
 (defmethod required-headers ((request request))
   (list
@@ -32,11 +30,13 @@
 
 (defmethod lsxpack-headers ((request request))
   (let* ((all-headers (nconc (required-headers request) (headers request)))
-         (header-count (length all-headers))
-         (lsxpack-headers (cffi:foreign-alloc
-                           :pointer
-                           :count header-count
-                           :initial-contents (mapcar #'make-lsxpack-header all-headers))))
-    (with-initialize-foreign-struct lsquic::http-headers
-      (setf lsquic:count header-count)
-      (setf lsquic:headers lsxpack-headers) lsxpack-headers)))
+         (lheaders (mapcar #'make-lsxpack-header all-headers))
+         (pheaders (cffi:foreign-alloc '(:struct lsxpack-header) :count (length all-headers)))
+         (http-headers (cffi:foreign-alloc '(:struct http-headers))))
+    (with-foreign-slots ((count headers) http-headers (:struct http-headers))
+      (setf headers pheaders)
+      (setf count 4))
+    (dotimes (i (length all-headers))
+      (setf (mem-aref pheaders '(:struct lsxpack-header) i) (mem-ref (elt lheaders i) '(:struct lsxpack-header))))
+    (view-header http-headers)
+    http-headers))

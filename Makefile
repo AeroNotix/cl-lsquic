@@ -17,7 +17,7 @@ clone:
 lsquic:
 	cd lsquic && cmake -DAS_SHARED_LIB=1 -DBORINGSSL_DIR=../boringssl . && make -j $(shell nproc)
 
-ffi: src/ffi.lisp src/ffi-dns.lisp src/ffi-udp.lisp
+ffi: src/ffi.lisp src/ffi-dns.lisp src/ffi-udp.lisp src/ffi-lsquic-helpers.lisp
 
 src/ffi.lisp: lsquic.i Makefile
 	swig -cffi -module ffi -outdir src/lsquic/ -I./lsquic/include/ lsquic.i
@@ -27,6 +27,9 @@ src/ffi-dns.lisp: dns.i Makefile c-src/libdns.so
 
 src/ffi-udp.lisp: udp.i Makefile c-src/libudp.so
 	swig -cffi -module ffi -outdir src/udp -I./c-src udp.i
+
+src/ffi-lsquic-helpers.lisp: lsquic-helpers.i Makefile c-src/liblsquic-helpers.so
+	swig -cffi -module ffi-helpers -outdir src/lsquic -I./c-src lsquic-helpers.i
 
 test:
 	@$(LISP) $($(LISP)_TEST_OPTS)

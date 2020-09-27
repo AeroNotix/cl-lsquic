@@ -33,7 +33,7 @@
                       ((cl:lower-case-p c)
                        (helper (cl:cdr lst) 'lower (cl:cons (cl:char-upcase c) rest)))
                       ((cl:digit-char-p c)
-                       (helper (cl:cdr lst) 'digit 
+                       (helper (cl:cdr lst) 'digit
                                (cl:case last
                                  ((upper lower) (cl:list* c #\- rest))
                                  (cl:t (cl:cons c rest)))))
@@ -92,7 +92,7 @@
 
 (cl:export '#.(chomp-lsquic "LSQUIC_MINOR_VERSION" 'constant))
 
-(cl:defconstant #.(chomp-lsquic "LSQUIC_PATCH_VERSION" 'constant) 10)
+(cl:defconstant #.(chomp-lsquic "LSQUIC_PATCH_VERSION" 'constant) 8)
 
 (cl:export '#.(chomp-lsquic "LSQUIC_PATCH_VERSION" 'constant))
 
@@ -861,14 +861,6 @@
 
 (cl:export '#.(chomp-lsquic "lsquic_stream_writev" 'function))
 
-(cffi:defcfun ("lsquic_stream_pwritev" #.(chomp-lsquic "lsquic_stream_pwritev" 'function)) :pointer
-  (s :pointer)
-  (preadv :pointer)
-  (user_data :pointer)
-  (n_to_write :pointer))
-
-(cl:export '#.(chomp-lsquic "lsquic_stream_pwritev" 'function))
-
 (cffi:defcstruct #.(chomp-lsquic "lsquic_reader" 'classname)
 	(#.(chomp-lsquic "lsqr_read" 'slotname) :pointer)
 	(#.(chomp-lsquic "lsqr_size" 'slotname) :pointer)
@@ -1213,10 +1205,10 @@
 	(#.(chomp-lsquic "buf" 'slotname) :string)
 	(#.(chomp-lsquic "name_hash" 'slotname) :uint32)
 	(#.(chomp-lsquic "nameval_hash" 'slotname) :uint32)
-	(#.(chomp-lsquic "name_offset" 'slotname) :unsigned-int)
-	(#.(chomp-lsquic "name_len" 'slotname) :unsigned-int)
-	(#.(chomp-lsquic "val_offset" 'slotname) :unsigned-int)
-	(#.(chomp-lsquic "val_len" 'slotname) :unsigned-int)
+	(#.(chomp-lsquic "name_offset" 'slotname) :uint16)
+	(#.(chomp-lsquic "name_len" 'slotname) :uint16)
+	(#.(chomp-lsquic "val_offset" 'slotname) :uint16)
+	(#.(chomp-lsquic "val_len" 'slotname) :uint16)
 	(#.(chomp-lsquic "chain_next_idx" 'slotname) :uint16)
 	(#.(chomp-lsquic "hpack_index" 'slotname) :uint8)
 	(#.(chomp-lsquic "qpack_index" 'slotname) :uint8)

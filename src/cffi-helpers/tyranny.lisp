@@ -5,6 +5,7 @@
    #:with-pointer-to
    #:with-pointer-to-int
    #:safe-foreign-alloc
+   #:with-initialize-foreign-struct-with-fill
    #:with-initialize-foreign-struct))
 
 (in-package :cffi-helpers)
@@ -31,13 +32,24 @@
   `(with-pointer-to (,binding-form :int)
      ,@body))
 
-(defun safe-foreign-alloc (type &key (count 1))
-  (static-vectors:fill-foreign-memory (cffi:foreign-alloc type :count count) (cffi:foreign-type-size type) 0))
+(defun safe-foreign-alloc (type &key (count 1) (fill-value 0))
+  (static-vectors:fill-foreign-memory
+   (cffi:foreign-alloc type :count count)
+   (* count (cffi:foreign-type-size type))
+   fill-value))
 
 (defmacro with-initialize-foreign-struct (type &body body)
   (let* ((struct-field-names (cffi:foreign-slot-names (list :struct type)))
          (struct-sym (gensym)))
     `(let ((,struct-sym (safe-foreign-alloc (list :struct ',type))))
        (cffi:with-foreign-slots (,struct-field-names ,struct-sym (:struct ,type))
-         (progn ,@body)
-         ,struct-sym))))
+         (progn ,@body))
+       ,struct-sym)))
+
+(defmacro with-initialize-foreign-struct-with-fill (type fill-value &body body)
+  (let* ((struct-field-names (cffi:foreign-slot-names (list :struct type)))
+         (struct-sym (gensym)))
+    `(let ((,struct-sym (safe-foreign-alloc (list :struct ',type) :fill-value ,fill-value)))
+       (cffi:with-foreign-slots (,struct-field-names ,struct-sym (:struct ,type))
+         (progn ,@body))
+       ,struct-sym)))

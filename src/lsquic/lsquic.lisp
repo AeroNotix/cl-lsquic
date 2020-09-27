@@ -14,52 +14,56 @@
 
 (defparameter already-lsquic-global-init nil)
 
-(defcallback cb-on-new-conn :pointer ((stream-if-ctx :pointer) (lsquic-conn :pointer))
-  (format t "cb-on-new-conn: ~D  / ~A~%" (conn-n-avail-streams lsquic-conn) (callback cb-on-new-conn))
+(defcallback cb-on-new-conn :pointer ((stream-if-ctx :pointer) (conn :pointer))
   stream-if-ctx)
 
-(defcallback cb-ongoaway-received :pointer ((lsquic-conn :pointer))
-  (format t "cb-ongoaway-received~%"))
+(defcallback cb-ongoaway-received :pointer ((conn :pointer)))
 
-(defcallback cb-on-conn-closed :void ((lsquic-conn :pointer))
-  (format t "cb-on-conn-closed~%")
-  (force-output))
+(defcallback cb-on-conn-closed :void ((conn :pointer)))
 
-(defcallback cb-on-new-stream :pointer ((stream-if-ctx :pointer) (lsquic-stream :pointer))
-  (format t "cb-on-new-stream ~A / ~A~%" stream-if-ctx lsquic-stream)
-  (force-output)
-
-  (let ((stream-ctx (conn-get-ctx (stream-conn lsquic-stream))))
-    (format t "Is stream pushed: ~D~%" (stream-is-pushed lsquic-stream))
-    (when (eq (stream-is-pushed lsquic-stream) 0)
-      (stream-wantwrite lsquic-stream 1)
+(defcallback cb-on-new-stream :pointer ((stream-if-ctx :pointer) (stream :pointer))
+  (let ((stream-ctx (conn-get-ctx (stream-conn stream))))
+    (when (eq (stream-is-pushed stream) 0)
+      (stream-wantwrite stream 1)
       (weird-pointers:save (pop-stream-ctx (weird-pointers:restore stream-ctx))))))
 
-(defcallback cb-on-read :void ((lsquic-stream :pointer) (lsquic-stream-ctx :pointer))
-  (format t "cb-on-read~%")
-  (force-output))
-
-(defcallback cb-on-write :void ((lsquic-stream :pointer) (lsquic-stream-ctx :pointer))
-  (format t "cb-on-write~%")
+(defcallback stream-readf :unsigned-int ((stream-ctx :pointer) (buf :pointer) (buf-len :unsigned-int) (fin :int))
+  (format t "in stream-readf: ~A" (cffi:foreign-string-to-lisp buf))
   (force-output)
-  (let* ((pipe (weird-pointers:restore lsquic-stream-ctx))
-         (headers (lsxpack-headers (request pipe))))
-    (format t "~D~%" (stream-send-headers lsquic-stream headers 0))))
+  -1)
 
-(defcallback cb-on-close :void ((lsquic-stream :pointer) (lsquic-stream-ctx :pointer))
-  (format t "cb-on-close~%") (force-output))
+(defcallback cb-on-read :void ((stream :pointer) (stream-ctx :pointer))
+  (let ((ctx (weird-pointers:restore stream-ctx))
+        (bytes-read (stream-readf stream (callback stream-readf) stream-ctx)))
+    (when (eq (stream-is-rejected stream) 1)
+      (stream-close stream))
+    (when (eq bytes-read 0)
+      (stream-shutdown stream 0)
+      (stream-wantread stream 0))))
 
-(defcallback cb-on-hsk-done :void ((lsquic-conn :pointer (lsquic-hsk-status lsquic-hsk-status)))
-  (format t "cb-on-hsk-done~%") (force-output))
+(defparameter send-headers nil)
 
-(defcallback cb-on-new-token :void ((lsquic-conn :pointer) (token :pointer) (token_size :int))
-  (format t "cb-on-new-token~%") (force-output))
+(defcallback cb-on-write :void ((stream :pointer) (stream-ctx :pointer))
+  (let* ((ctx (weird-pointers:restore stream-ctx))
+         (packed-headers (lsxpack-headers (request ctx)))
+         (eos (if (body (request ctx)) 0 1)))
+    (view-header packed-headers)
+    (unless send-headers
+      (stream-send-headers stream packed-headers eos)
+      (setf send-headers t))))
 
-(defcallback cb-on-sess-resume-info :void ((lsquic-conn :pointer) (token :pointer) (token_size :int))
-  (format t "cb-on-sess-resume~%") (force-output))
+(defcallback cb-on-close :void ((stream :pointer) (stream-ctx :pointer)))
+
+(defcallback cb-on-hsk-done :void ((conn :pointer (hsk-status lsquic-hsk-status))))
+
+(defcallback cb-on-new-token :void ((conn :pointer) (token :pointer) (token_size :int)))
+
+(defcallback cb-on-sess-resume-info :void ((conn :pointer) (token :pointer) (token_size :int)))
 
 (defcallback cb-packets-out :int ((packets-out-ctx :pointer) (specs :pointer) (count :int))
   (declare (ignore packets-out-ctx))
+  (format t "cb-packets-out~%")
+  (force-output)
   (let ((n 0))
     (loop while (< n count)
           do

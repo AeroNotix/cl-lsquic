@@ -14,5 +14,5 @@
   (sb-posix:close (input pipe))
   (sb-posix:close (output pipe)))
 
-(defcallback write-pipe :void ((ctx :pointer) (buf :pointer) (len :int) (fin :int))
-  (sb-posix:write (output (weird-pointers:restore ctx)) buf len))
+(defmethod wait-for-response ((pipe pipe))
+  (sleep 60))

@@ -31,7 +31,7 @@
                                  :verb verb
                                  :body body))
          (pipe (lsquic:new-stream client request)))
-    (wait-for-response pipe)))
+    (lsquic:wait-for-response pipe)))
 
 (defmacro request-no-body (verb)
   (let* ((sym-name (symbol-name verb))
