@@ -1221,7 +1221,7 @@
 	(#.(chomp-lsquic "hpack_index" 'slotname) :uint8)
 	(#.(chomp-lsquic "qpack_index" 'slotname) :uint8)
 	(#.(chomp-lsquic "app_index" 'slotname) :uint8)
-	(#.(chomp-lsquic "flags" 'slotname) #.(chomp-lsquic "lsxpack_flag" 'enumname))
+	(#.(chomp-lsquic "flags" 'slotname) :uint8)
 	(#.(chomp-lsquic "indexed_type" 'slotname) :uint8)
 	(#.(chomp-lsquic "dec_overhead" 'slotname) :uint8))
 
