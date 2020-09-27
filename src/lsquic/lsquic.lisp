@@ -47,7 +47,6 @@
   (let* ((ctx (weird-pointers:restore stream-ctx))
          (packed-headers (lsxpack-headers (request ctx)))
          (eos (if (body (request ctx)) 0 1)))
-    (view-header packed-headers)
     (unless send-headers
       (stream-send-headers stream packed-headers eos)
       (setf send-headers t))))
