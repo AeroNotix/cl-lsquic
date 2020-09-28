@@ -8,7 +8,6 @@
 #include <sys/types.h>
 
 struct sockaddr* gen_sockaddr(int family, const char *ip, const u_short port) {
-    printf("Creating sockaddr for %s:%d\n", ip, port);
     struct sockaddr_storage *ss = malloc(sizeof(struct sockaddr_storage));
 
     switch (family)

@@ -12,11 +12,13 @@
                (:file "lsquic")
                (:file "request")
                (:file "io")
+               (:file "ev")
                (:file "client"))
   :depends-on (:bordeaux-threads
                :cffi
                :dns
                :cffi-helpers
+               :lev
                :split-sequence
                :weird-pointers
                :udp))

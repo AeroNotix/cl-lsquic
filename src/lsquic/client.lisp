@@ -105,11 +105,8 @@
                    0
                    (cffi:null-pointer)
                    0)))
-          (check-null-p conn)
+        (check-null-p conn)
           (setf quic-conn conn))))
-  (sb-ext:schedule-timer
-   (sb-ext:make-timer (lambda () (process-conns client)) :thread t)
-   0.1)
   client)
 
 (defmethod new-engine ((client client))
@@ -122,33 +119,11 @@
   (with-slots (engine) client
     (engine-destroy engine)))
 
-(defmethod process-conns ((client client))
-  (bt:with-lock-held ((lock client))
-    (with-slots (engine) client
-      (lsquic:engine-process-conns engine)
-      (with-pointer-to-int (diff 0)
-        (when (> (lsquic:engine-earliest-adv-tick engine diff) 0)
-          (sb-ext:schedule-timer
-           (sb-ext:make-timer (lambda () (process-conns client)) :thread t)
-           (/ (mem-aref diff :int) 1000000)))))))
-
 (defmethod connect ((client client))
   (set-context client)
   (new-engine client)
   (quic-connect client)
-  (process-conns client)
-  (packets-in client))
-
-(defmethod packets-in ((client client))
-  ;; TODO: Switch to libev
-  (bt:with-lock-held ((lock client))
-    (with-slots (socket engine peer-ctx) client
-      (let ((read (udp:recv-packets-in engine (local-sockaddr socket) (sb-bsd-sockets:socket-file-descriptor (socket socket)) peer-ctx)))
-        (when (>= read 0)
-          (lsquic:engine-process-conns engine)
-          (sb-ext:schedule-timer
-           (sb-ext:make-timer (lambda () (packets-in client)) :thread t)
-           0.1))))))
+  (start-new-loop client))
 
 (defmethod push-stream-ctx ((client client) ctx)
   (bt:with-lock-held ((rq-lock client))
@@ -163,3 +138,12 @@
     (push-stream-ctx client pipe)
     (conn-make-stream (quic-conn client))
     pipe))
+
+(defmethod get-fd ((client client))
+  (sb-bsd-sockets:socket-file-descriptor (socket (socket client))))
+
+(defmethod start-new-loop ((client client))
+  (let ((io (cffi:foreign-alloc '(:struct lev:ev-io)))
+        (timer (cffi:foreign-alloc '(:struct lev:ev-timer))))
+    (lev:ev-init timer (callback process-conns-cb))
+    (lev:ev-io-init io (callback packets-in-cb) (get-fd client) lev:+ev-read+)))
