@@ -37,11 +37,9 @@
          (count-hdrs (length all-headers))
          (pheaders (cffi:foreign-alloc '(:struct lsxpack-header) :count count-hdrs))
          (http-headers (cffi:foreign-alloc '(:struct http-headers))))
-
     (dotimes (i count-hdrs)
       (let ((hdr (mem-aptr pheaders '(:struct lsxpack-header) i)))
         (make-lsxpack-header hdr (elt all-headers i))))
-
     (with-foreign-slots ((count headers) http-headers (:struct http-headers))
       (setf count count-hdrs)
       (setf headers pheaders))
