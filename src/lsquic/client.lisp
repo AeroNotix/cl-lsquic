@@ -132,10 +132,10 @@
     (pop (request-queue client))))
 
 (defmethod new-stream ((client client) request)
-  (let ((pipe (make-instance 'pipe :request request)))
-    (push-stream-ctx client pipe)
+  (let ((handler (make-instance 'request-handler :request request)))
+    (push-stream-ctx client handler)
     (conn-make-stream (quic-conn client))
-    pipe))
+    handler))
 
 (defmethod get-fd ((client client))
   (sb-bsd-sockets:socket-file-descriptor (socket (socket client))))

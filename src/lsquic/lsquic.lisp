@@ -28,8 +28,11 @@
       (weird-pointers:save (pop-stream-ctx (weird-pointers:restore stream-ctx))))))
 
 (defcallback stream-readf-cb :unsigned-int ((stream-ctx :pointer) (buf :pointer) (buf-len :unsigned-int) (fin :int))
-  (format t "in stream-readf: ~A~%" (cffi:foreign-string-to-lisp buf))
-  (force-output)
+  (let* ((request-handler (weird-pointers:restore stream-ctx)))
+    (multiple-value-bind (http header-completed-p completed-p)
+        (funcall (response-parser request-handler) (babel:string-to-octets (cffi:foreign-string-to-lisp buf)))
+      (when completed-p
+        (signal-completed request-handler))))
   buf-len)
 
 (defcallback cb-on-read :void ((stream :pointer) (stream-ctx :pointer))

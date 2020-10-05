@@ -11,7 +11,7 @@
                (:file "sockets")
                (:file "lsquic")
                (:file "request")
-               (:file "io")
+               (:file "request-handler")
                (:file "ev")
                (:file "client"))
   :depends-on (:bordeaux-threads
@@ -20,5 +20,6 @@
                :cffi-helpers
                :lev
                :split-sequence
+               :fast-http
                :weird-pointers
                :udp))

@@ -30,8 +30,8 @@
                                  :authority (lsquic:host client)
                                  :verb verb
                                  :body body))
-         (pipe (lsquic:new-stream client request)))
-    (lsquic:wait-for-response pipe)))
+         (request-handler (lsquic:new-stream client request)))
+    (lsquic::wait-for-response request-handler)))
 
 (defmacro request-no-body (verb)
   (let* ((sym-name (symbol-name verb))
