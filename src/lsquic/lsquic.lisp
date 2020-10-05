@@ -27,14 +27,13 @@
       (stream-wantwrite stream 1)
       (weird-pointers:save (pop-stream-ctx (weird-pointers:restore stream-ctx))))))
 
-(defcallback stream-readf :unsigned-int ((stream-ctx :pointer) (buf :pointer) (buf-len :unsigned-int) (fin :int))
+(defcallback stream-readf-cb :unsigned-int ((stream-ctx :pointer) (buf :pointer) (buf-len :unsigned-int) (fin :int))
   (format t "in stream-readf: ~A~%" (cffi:foreign-string-to-lisp buf))
   (force-output)
   buf-len)
 
 (defcallback cb-on-read :void ((stream :pointer) (stream-ctx :pointer))
-  (let ((ctx (weird-pointers:restore stream-ctx))
-        (bytes-read (stream-readf stream (callback stream-readf) stream-ctx)))
+  (let ((bytes-read (stream-readf stream (callback stream-readf-cb) stream-ctx)))
     (when (eq (stream-is-rejected stream) 1)
       (stream-close stream))
     (when (eq bytes-read 0)
