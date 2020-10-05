@@ -4,7 +4,7 @@ sbcl_TEST_OPTS=--noinform --disable-debugger --quit --load ./run-tests.lisp
 
 .PHONY: lsquic build test
 
-all: ffi
+all: ffi c-libs
 
 image:
 	sbcl --load save-executable.lisp
@@ -30,6 +30,9 @@ src/ffi-udp.lisp: udp.i Makefile c-src/libudp.so
 
 src/ffi-lsquic-helpers.lisp: lsquic-helpers.i Makefile c-src/liblsquic-helpers.so
 	swig -cffi -module ffi-helpers -outdir src/lsquic -I./c-src lsquic-helpers.i
+
+c-libs:
+	cd c-src && make
 
 test:
 	@$(LISP) $($(LISP)_TEST_OPTS)
