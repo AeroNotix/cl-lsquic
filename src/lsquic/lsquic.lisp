@@ -46,7 +46,7 @@
 (defcallback cb-on-write :void ((stream :pointer) (stream-ctx :pointer))
   (let* ((ctx (weird-pointers:restore stream-ctx))
          (packed-headers (lsxpack-headers (request ctx)))
-         (eos 0))
+         (eos 1))
     (unless send-headers
       (stream-send-headers stream packed-headers eos)
       (stream-shutdown stream 1)
