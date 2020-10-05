@@ -23,14 +23,11 @@
     (setf val-offset (length (name header)))))
 
 (defmethod required-headers ((request request))
-  (let ((hdrs (list
-               (make-instance 'header :name ":method" :value (verb request))
-               (make-instance 'header :name ":scheme" :value (scheme request))
-               (make-instance 'header :name ":path" :value (path request))
-               (make-instance 'header :name ":authority" :value (authority request)))))
-    (if (body request)
-        hdrs
-        (append hdrs (list (make-instance 'header :name "connection" :value "close"))))))
+  (list
+   (make-instance 'header :name ":method" :value (verb request))
+   (make-instance 'header :name ":scheme" :value (scheme request))
+   (make-instance 'header :name ":path" :value (path request))
+   (make-instance 'header :name ":authority" :value (authority request))))
 
 (defmethod lsxpack-headers ((request request))
   (let* ((all-headers (append (required-headers request) (headers request)))
