@@ -38,8 +38,6 @@
    (engine-api      :initform (cffi-helpers:safe-foreign-alloc '(:struct engine-api))
                     :accessor engine-api)
    (engine          :accessor engine)
-   ;; This lock protects the quic-conn
-   (lock            :initform (bt:make-lock) :accessor lock)
    (quic-conn       :accessor quic-conn)
    (peer-ctx        :accessor peer-ctx)
    (conn-ctx        :accessor conn-ctx)
