@@ -39,8 +39,7 @@
       (stream-close stream))
     (when (eq bytes-read 0)
       (stream-shutdown stream 0)
-      (stream-wantread stream 0))
-    bytes-read))
+      (stream-wantread stream 0))))
 
 (defparameter send-headers nil)
 
