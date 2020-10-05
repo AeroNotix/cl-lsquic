@@ -50,6 +50,7 @@
     (unless send-headers
       (stream-send-headers stream packed-headers eos)
       (stream-shutdown stream 1)
+      (stream-wantwrite stream 0)
       (stream-wantread stream 1)
       (setf send-headers t))))
 
