@@ -43,4 +43,3 @@
   (with-slots (local-sockaddr peer-sockaddr) socket
     (foreign-free local-sockaddr)
     (foreign-free peer-sockaddr)))
-
